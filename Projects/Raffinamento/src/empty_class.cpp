@@ -246,70 +246,15 @@ namespace ProjectLibrary
       {
         return false;
       }
-      else
-      {
-        cout << "Cell0D marker:" << endl;
-        for(auto it = mesh.Cell0DMarkers.begin(); it != mesh.Cell0DMarkers.end(); it++)
-        {
-          cout << "key:\t" << it -> first << "\t values:";
-          for(const unsigned int id : it -> second)
-            cout << "\t" << id;
-
-          cout << endl;
-        }
-      }
 
       if(!ImportCell1Ds(mesh,file1D))
       {
         return false;
       }
-      else
-      {
-        cout << "Cell1D marker:" << endl;
-        for(auto it = mesh.Cell1DMarkers.begin(); it != mesh.Cell1DMarkers.end(); it++)
-        {
-          cout << "key:\t" << it -> first << "\t values:";
-          for(const unsigned int id : it -> second)
-            cout << "\t" << id;
-
-          cout << endl;
-        }
-      }
 
       if(!ImportCell2Ds(mesh,file2D))
       {
         return false;
-      }
-      else
-      {
-        // Test:
-        for(unsigned int c = 0; c < mesh.NumberCell2D; c++)
-        {
-          array<unsigned int, 3> edges = mesh.Cell2DEdges[c];
-
-          for(unsigned int e = 0; e < 3; e++)
-          {
-             const unsigned int origin = mesh.Cell1DVertices[edges[e]][0];
-             const unsigned int end = mesh.Cell1DVertices[edges[e]][1];
-
-             auto findOrigin = find(mesh.Cell2DVertices[c].begin(), mesh.Cell2DVertices[c].end(), origin);
-             if(findOrigin == mesh.Cell2DVertices[c].end())
-             {
-               cerr << "Wrong mesh" << endl;
-               return 2;
-             }
-
-             auto findEnd = find(mesh.Cell2DVertices[c].begin(), mesh.Cell2DVertices[c].end(), end);
-             if(findEnd == mesh.Cell2DVertices[c].end())
-             {
-               cerr << "Wrong mesh" << endl;
-               return 3;
-             }
-
-             cout << "c: " << c << ", origin: " << *findOrigin << ", end: " << *findEnd << endl;
-
-          }
-        }
       }
 
       return true;
