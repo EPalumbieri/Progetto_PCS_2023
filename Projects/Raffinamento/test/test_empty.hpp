@@ -7,9 +7,15 @@
 
 using namespace testing;
 
-TEST(TestEmpty, TestEmpty)
+TEST(TestMesh, TestTriangleLoop)
 {
+   ProjectLibrary::Mesh mesh;
+   ASSERT_TRUE(ImportMesh(mesh,"./Dataset/Test1/Cell0Ds.csv","./Dataset/Test1/Cell1Ds.csv", "./Dataset/Test1/Cell2Ds.csv"));
 
+   for( auto it=mesh.GraphedMesh.begin();it !=mesh.GraphedMesh.end();it++)
+   {
+       ASSERT_EQ((*it)->next->next,*it);
+   }
 }
 
 #endif // __TEST_EMPTY_H

@@ -25,8 +25,10 @@ namespace ProjectLibrary
       file.open(nomeFile);
 
       if(file.fail())
+      {
+        cerr<<"wrong file";
         return false;
-
+      }
       list<string> listLines;
       string line;
       while (getline(file, line))
@@ -76,7 +78,10 @@ namespace ProjectLibrary
       file.open(nomeFile);
 
       if(file.fail())
+      {
+        cerr<<"wrong file";
         return false;
+      }
 
       list<string> listLines;
       string line;
@@ -129,7 +134,10 @@ namespace ProjectLibrary
       file.open(nomeFile);
 
       if(file.fail())
+      {
+        cerr<<"wrong file";
         return false;
+      }
 
       list<string> listLines;
       string line;
@@ -239,16 +247,19 @@ namespace ProjectLibrary
 
       if(!ImportCell0Ds(mesh,file0D))
       {
+        cerr<<"FailedCell0";
         return false;
       }
 
       if(!ImportCell1Ds(mesh,file1D))
       {
+        cerr<<"FailedCell1";
         return false;
       }
 
       if(!ImportCell2Ds(mesh,file2D))
       {
+        cerr<<"FailedCell2";
         return false;
       }
 
