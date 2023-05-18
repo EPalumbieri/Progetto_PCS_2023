@@ -5,6 +5,7 @@
 #include "Eigen/Eigen"
 #include <fstream>
 #include "map"
+#include <unordered_set>
 
 using namespace std;
 using namespace Eigen;
@@ -13,27 +14,20 @@ namespace ProjectLibrary
 {
     struct Edge
     {
-        unsigned int id;
-        Point p1;
-        Point p2;
+        std::unordered_set<unsigned int> points;
     };
 
     struct Triangle
     {
-        Point p1;
-        Point p2;
-        Point p3;
-        Edge e1;
-        Edge e2;
-        Edge e3;
-        unsigned int id;
+        array<unsigned int,3> vertices;
+        array<unsigned int,3> edges;
         double area;
     };
 
     struct OrientedEdge
     {
-      Edge* RealEdge;
-      Triangle* RealTriangle;
+      unsigned int RealEdge;
+      unsigned int RealTriangle;
       OrientedEdge* symmetric=nullptr;
       OrientedEdge* next=nullptr;
     };
@@ -42,35 +36,34 @@ namespace ProjectLibrary
     {
         double x;
         double y;
-        unsigned int id;
 
         Point(const double& x,
-              const double& y,
-              const unsigned int& id):
-          x(x), y(y), id(id)
+              const double& y):
+          x(x), y(y)
         {
         }
 
         Point(const Point& p):
-          x(p.x), y(p.y), id(p.id)
+          x(p.x), y(p.y)
         {
         }
+
     };
 
     struct Mesh
     {
         unsigned int NumberCell0D = 0; ///< number of Cell0D
-        vector<Point> Cell0D = {}; ///< Cell0D id, size 1 x NumberCell0D
+        map<unsigned int, Point> Cell0D = {}; ///< Cell0D id, size 1 x NumberCell0D
         map<unsigned int, list<unsigned int>> Cell0DMarkers = {}; ///< Cell0D markers, size 1 x NumberCell0D (marker)
 
         unsigned int NumberCell1D = 0; ///< number of Cell1D
-        vector<Edge> Cell1D = {}; ///< Cell1D id, size 1 x NumberCell1D
+        map<unsigned int, Edge> Cell1D = {}; ///< Cell1D id, size 1 x NumberCell1D
         map<unsigned int, list<unsigned int>> Cell1DMarkers = {}; ///< Cell1D propertoes, size 1 x NumberCell1D (marker)
 
         unsigned int NumberCell2D = 0; ///< number of Cell2D
-        vector<Triangle> Cell2DId = {}; ///< Cell2D id, size 1 x NumberCell2D
+        map<unsigned int, Triangle> Cell2D = {}; ///< Cell2D id, size 1 x NumberCell2D
 
-        vector<OrientedEdge> GraphedMesh;
+        vector<OrientedEdge*> GraphedMesh;
     };
 
     bool clockwise(Point P1, Point P2, Point P3);
