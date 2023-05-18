@@ -7,6 +7,8 @@ namespace ProjectLibrary
 {
   class Empty
   {
+    private:
+    int test
     public:
       void Show() const { std::cout<< "Hello world;"<< std::endl; }
   };
