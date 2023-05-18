@@ -48,6 +48,10 @@ namespace ProjectLibrary
         {
         }
 
+        Point(){
+
+        }
+
     };
 
     struct Mesh

@@ -2,10 +2,11 @@
 
 namespace ProjectLibrary
 {
-    bool clockwise(const Point& P0,
-                   const Point& P1,
-                   const Point& P2)
+    bool clockwise(Mesh& mesh, unsigned int id1, unsigned int id2, unsigned int id3)
     {
+      Point P0=Point(mesh.Cell0D[id1]);
+      Point P1=Point(mesh.Cell0D[id2]);
+      Point P2=Point(mesh.Cell0D[id3]);
       return (P1.x - P0.x)*(P2.y - P0.y) - (P2.x - P0.x)*(P1.y - P0.y)>0;
     }
 
@@ -52,8 +53,7 @@ namespace ProjectLibrary
         unsigned int marker;
         Vector2d coord;
         converter >>  id >> marker >> coord(0) >> coord(1);
-        Point coordinates(coord(0),coord(1));
-        mesh.Cell0D[id]=coordinates;
+        mesh.Cell0D[id]=Point(coord(0),coord(1));
 
         if( marker != 0)
         {
@@ -212,7 +212,7 @@ namespace ProjectLibrary
             e12=2;
         }
 
-        if(ProjectLibrary::clockwise(mesh.Cell0D[triangle.vertices[0]], mesh.Cell0D[triangle.vertices[1]], mesh.Cell0D[triangle.vertices[2]])){
+        if(ProjectLibrary::clockwise(mesh,triangle.vertices[0],triangle.vertices[1],triangle.vertices[2])){
             //e01->e12->e02
             ptrs[e01]->next=ptrs[e12];
             ptrs[e12]->next=ptrs[e02];
