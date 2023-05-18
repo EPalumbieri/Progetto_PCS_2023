@@ -1,4 +1,4 @@
-#include "empty_class.hpp"
+#include "test_class.hpp"
 
 namespace ProjectLibrary
 {
