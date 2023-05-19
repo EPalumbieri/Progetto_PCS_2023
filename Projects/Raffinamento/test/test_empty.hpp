@@ -14,7 +14,7 @@ TEST(TestMesh, TestTriangleLoop)
 
    for( auto it=mesh.GraphedMesh.begin();it !=mesh.GraphedMesh.end();it++)
    {
-       ASSERT_EQ((*it)->next->next,*it);
+       ASSERT_EQ((*it)->next->next->next,(*it));
    }
 }
 

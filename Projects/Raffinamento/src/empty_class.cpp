@@ -155,35 +155,22 @@ namespace ProjectLibrary
       }
 
       unsigned int key;
-
+      vector<OrientedEdge*> orientededges;
+      unsigned int k=0;
       for (const string& line : listLines)
       {
         istringstream converter(line);
 
         Triangle triangle;
         unsigned int id;
-        array<OrientedEdge*,3> ptrs;
-        array<OrientedEdge,3> orientededges;
         converter >> id;
         for(unsigned int i = 0; i < 3; i++)
           converter >> triangle.vertices[i];
         for(unsigned int i = 0; i < 3; i++){
-          ptrs[i]=&orientededges[i];
           converter >> triangle.edges[i];
-          (ptrs[i])->RealEdge=triangle.edges[i];
-          ptrs[i]->RealTriangle=id;
-          key=triangle.edges[i];
-          auto it = std::find_if(mesh.GraphedMesh.begin(), mesh.GraphedMesh.end(),
-          [&key](const OrientedEdge* edge) { return edge->RealEdge == key; });
-
-          if(it != mesh.GraphedMesh.end()){
-             //found
-             ptrs[i]->symmetric=*it;
-             (*it)->symmetric=ptrs[i];
-          }else {
-            //not found
-
-          }
+          OrientedEdge* orientededge = new OrientedEdge(triangle.edges[i],id);
+          orientededges.push_back(orientededge);
+          k++;
         }
         triangle.area=ProjectLibrary::area(mesh.Cell0D[triangle.vertices[0]],mesh.Cell0D[triangle.vertices[1]],mesh.Cell0D[triangle.vertices[2]]);
 
@@ -197,46 +184,57 @@ namespace ProjectLibrary
         unsigned int e01, e02, e12;
 
         if ((mesh.Cell1D[triangle.edges[0]].points==temp01)){
-            e01=0;
+            e01=k-3;
         }else if (mesh.Cell1D[triangle.edges[1]].points==temp01){
-            e01=1;
+            e01=k-2;
         }else{
-            e01=2;
+            e01=k-1;
         }
 
         if ((mesh.Cell1D[triangle.edges[0]].points==temp02)){
-            e02=0;
+            e02=k-3;
         }else if (mesh.Cell1D[triangle.edges[1]].points==temp02){
-            e02=1;
+            e02=k-2;
         }else{
-            e02=2;
+            e02=k-1;
         }
 
         if ((mesh.Cell1D[triangle.edges[0]].points==temp12)){
-            e12=0;
+            e12=k-3;
         }else if (mesh.Cell1D[triangle.edges[1]].points==temp12){
-            e12=1;
+            e12=k-2;
         }else{
-            e12=2;
+            e12=k-1;
         }
 
         if(ProjectLibrary::clockwise(mesh,triangle.vertices[0],triangle.vertices[1],triangle.vertices[2])){
             //e01->e12->e02
-            ptrs[e01]->next=ptrs[e12];
-            ptrs[e12]->next=ptrs[e02];
-            ptrs[e02]->next=ptrs[e01];
+            orientededges[e01]->next=orientededges[e12];
+            orientededges[e12]->next=orientededges[e02];
+            orientededges[e02]->next=orientededges[e01];
         }else{
            //e02->e12->e01
-            ptrs[e02]->next=ptrs[e12];
-            ptrs[e12]->next=ptrs[e01];
-            ptrs[e01]->next=ptrs[e02];
+            orientededges[e02]->next=orientededges[e12];
+            orientededges[e12]->next=orientededges[e01];
+            orientededges[e01]->next=orientededges[e02];
         }
-
         mesh.Cell2D[id]=triangle;
-        for(int i=0;i<3;i++){
-           mesh.GraphedMesh.push_back(ptrs[i]);
+
+        for(int i=k-3;i<k;i++){
+            key=triangle.edges[i%3];
+            auto it = std::find_if(orientededges.begin(), orientededges.end()-3,
+             [&key](const OrientedEdge* edge) { return edge->RealEdge == key; });
+
+            if(it != orientededges.end()-3){
+               //found
+               orientededges[i]->symmetric=(*it);
+               (*it)->symmetric=orientededges[i];
+            }else {
+              //not found
+            }
         }
       }
+      mesh.GraphedMesh=orientededges;
       file.close();
       return true;
     }

@@ -5,6 +5,7 @@
 #include "Eigen/Eigen"
 #include <fstream>
 #include "map"
+#include <algorithm>
 #include <unordered_set>
 
 using namespace std;
@@ -30,6 +31,12 @@ namespace ProjectLibrary
       unsigned int RealTriangle;
       OrientedEdge* symmetric=nullptr;
       OrientedEdge* next=nullptr;
+
+      OrientedEdge(unsigned int realEdge,
+                   unsigned int realTriangle):
+          RealEdge(realEdge),RealTriangle(realTriangle),symmetric(nullptr), next(nullptr){
+
+      }
     };
 
     struct Point
