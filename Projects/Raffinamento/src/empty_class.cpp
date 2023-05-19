@@ -220,7 +220,7 @@ namespace ProjectLibrary
         }
         mesh.Cell2D[id]=triangle;
 
-        for(int i=k-3;i<k;i++){
+        for(unsigned int i=k-3;i<k;i++){
             key=triangle.edges[i%3];
             auto it = std::find_if(orientededges.begin(), orientededges.end()-3,
              [&key](const OrientedEdge* edge) { return edge->RealEdge == key; });
