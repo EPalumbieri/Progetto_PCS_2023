@@ -59,6 +59,12 @@ namespace ProjectLibrary
 
         }
 
+        void operator=(const Point& point)
+        {
+            x=point.x;
+            y=point.y;
+        }
+
     };
 
     struct Mesh
