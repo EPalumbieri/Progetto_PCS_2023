@@ -505,6 +505,7 @@ namespace ProjectLibrary
         {
           cerr<<"wrong file";
           return false;
+
         }
 
         file<<"Id X Y\n";
@@ -545,7 +546,7 @@ namespace ProjectLibrary
 
         if(file.fail())
         {
-          cerr<<"wrong file";
+          cerr<<"wrong file ";
           return false;
         }
 
