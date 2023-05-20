@@ -239,15 +239,15 @@ namespace ProjectLibrary
       return true;
     }
 
-    inline double distance(const Point& p1, const Point& p2)
+    double distance(const Point& p1, const Point& p2)
     {
       return (sqrt(normSquared(p1.x - p2.x, p1.y - p2.y)));
     }
 
-    double length(Mesh& mesh,unsigned int edge){
-        auto a=mesh.Cell1D[edge].points;
+    double length(Mesh& mesh, unsigned int idEdge){
+        auto a=mesh.Cell1D[idEdge].points;
         auto p1= mesh.Cell0D[*a.begin()];
-        auto p2= mesh.Cell0D[*a.end()];
+        auto p2= mesh.Cell0D[*(++a.begin())];
         return distance(p1,p2);
     }
 
@@ -287,12 +287,13 @@ namespace ProjectLibrary
     }
 
     OrientedEdge* getBiggestEdge(Mesh &mesh, unsigned int idTriangle){
-        double max=-1;
+        double maxx=-1;
+        double tmpp=0;
         unsigned int idMax = 0;
         for(int i=0; i<3;i++){
-            double tmp=length(mesh,mesh.Cell2D[idTriangle].edges[i]);
-            if(max<tmp){
-                max=tmp;
+            tmpp=length(mesh,mesh.Cell2D[idTriangle].edges[i]);
+            if(maxx<tmpp){
+                maxx=tmpp;
                 idMax=mesh.Cell2D[idTriangle].edges[i];
             }
         }

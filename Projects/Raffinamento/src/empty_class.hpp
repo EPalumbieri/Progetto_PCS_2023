@@ -107,10 +107,6 @@ namespace ProjectLibrary
         vector<unsigned int> StartingTriangles;
     };
 
-    inline bool compareByArea(const Triangle &t1, const Triangle &t2)
-    {
-        return (t1.area < t2.area);
-    }
 
     void getStartingTriangles(Mesh &mesh, unsigned int n);
 
@@ -120,7 +116,7 @@ namespace ProjectLibrary
 
     double distance(const Point& p1, const Point& p2);
 
-    double length(Mesh& mesh,OrientedEdge* edge);
+    double length(Mesh& mesh,unsigned int idTriangle);
 
     bool isLongest(Mesh& mesh,OrientedEdge* edge);
 
@@ -129,6 +125,8 @@ namespace ProjectLibrary
     bool bisect(Mesh& mesh,OrientedEdge* edge);
 
     void getStartingTriangles(Mesh &mesh, unsigned int n);
+
+    unsigned int findThirdVertex(unordered_set<unsigned int> PointsNext, unsigned int idP1, unsigned int idP2);
 
     OrientedEdge* getBiggestEdge(Mesh &mesh, unsigned int idTriangle);
 

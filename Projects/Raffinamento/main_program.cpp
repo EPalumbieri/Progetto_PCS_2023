@@ -9,13 +9,10 @@ int main()
   {
     return 1;
   }
-  for ( auto it = mesh.Cell2D.begin(); it != mesh.Cell2D.end();it++ ){
-      cout<<(it)->second.area<<endl;
-  }
   getStartingTriangles(mesh,5);
-  for (int i=0; i<5;i++){
-      cout<<mesh.Cell2D[mesh.StartingTriangles[i]].area<<endl;
-  }
+
+  for (int i=0;i<mesh.NumberCell2D;i++)
+    cout<<getBiggestEdge(mesh,i)->RealEdge<<endl;
 
   bisect(mesh,*(mesh.GraphedMesh.begin()+10));
   bisect(mesh,*(mesh.GraphedMesh.begin()+20));
