@@ -366,11 +366,15 @@ namespace ProjectLibrary
         if (edge->symmetric==nullptr){
             mesh.Cell1D.erase(edge->RealEdge);
             mesh.Cell2D.erase(edge->RealTriangle);
-            auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.begin(),edge);
+            auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.end(),edge);
             mesh.GraphedMesh.erase(it);
             delete edge;
             return true;
         }else{
+            auto itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->symmetric->RealTriangle);
+            if(itT != mesh.StartingTriangles.end()){
+                mesh.StartingTriangles.erase(itT);
+            }
             auto PointsNext=mesh.Cell1D[edge->symmetric->next->RealEdge].points;
             auto idPPrec = findThirdVertex(PointsNext,idP1,idP2);
             Point pPrec = mesh.Cell0D[idPPrec];
@@ -435,11 +439,11 @@ namespace ProjectLibrary
             mesh.Cell2D.erase(edge->RealTriangle);
             mesh.Cell1D.erase(edge->symmetric->RealEdge);
             mesh.Cell2D.erase(edge->symmetric->RealTriangle);
-            auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.begin(),edge->symmetric);
+            auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.end(),edge->symmetric);
             mesh.GraphedMesh.erase(it);
             delete edge->symmetric;
             return true;
-            it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.begin(),edge);
+            it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.end(),edge);
             mesh.GraphedMesh.erase(it);
             delete edge;
             return true;
