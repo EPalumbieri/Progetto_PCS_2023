@@ -266,29 +266,9 @@ namespace ProjectLibrary
         return(Point((p1.x+p2.x)/2,(p1.y+p2.y)/2));
     }
 
-
-    bool bisectNoSymmetric(Mesh& mesh,OrientedEdge* edge){
-        auto a=mesh.Cell1D[edge->RealEdge].points;
-        unsigned int idP1= *a.begin();
-        unsigned int idP2= *(++a.begin());
-        Point p1= mesh.Cell0D[idP1];
-        Point p2= mesh.Cell0D[idP2];
-        Point pmiddle=midpoint(p1,p2);
-        unsigned int idPmiddle=mesh.NumberCell0D;
-        mesh.NumberCell0D++;
-        auto PointsNext=mesh.Cell1D[edge->next->RealEdge].points;
+    unsigned int findThirdVertex(unordered_set<unsigned int> PointsNext, unsigned int idP1, unsigned int idP2){
         auto itN1 = PointsNext.find(idP1);
         auto itN2 = PointsNext.find(idP2);
-        unsigned int idENext, idEPrec;
-        idENext=edge->next->RealEdge;
-        idEPrec=edge->next->next->RealEdge;
-        Edge e1m,e2m,eNm;
-        e1m=Edge(unordered_set<unsigned int> ({idP1, idPmiddle}));
-        unsigned int ide1m=mesh.NumberCell1D;
-        mesh.NumberCell1D++;
-        e2m=Edge(unordered_set<unsigned int> ({idP2, idPmiddle}));
-        unsigned int ide2m=mesh.NumberCell1D;
-        mesh.NumberCell1D++;
         unsigned int idPNext;
         if(itN1 != PointsNext.end()){
             if (itN1 == PointsNext.begin()){
@@ -303,6 +283,30 @@ namespace ProjectLibrary
                 idPNext= *(PointsNext.begin());
             }
         }
+        return idPNext;
+    }
+    bool bisect(Mesh& mesh,OrientedEdge* edge){
+        auto a=mesh.Cell1D[edge->RealEdge].points;
+        unsigned int idP1= *a.begin();
+        unsigned int idP2= *(++a.begin());
+        Point p1= mesh.Cell0D[idP1];
+        Point p2= mesh.Cell0D[idP2];
+        Point pmiddle=midpoint(p1,p2);
+        unsigned int idPmiddle=mesh.NumberCell0D;
+        mesh.NumberCell0D++;
+        unsigned int idENext, idEPrec;
+        idENext=edge->next->RealEdge;
+        idEPrec=edge->next->next->RealEdge;
+        Edge e1m,e2m,eNm;
+        e1m=Edge(unordered_set<unsigned int> ({idP1, idPmiddle}));
+        unsigned int ide1m=mesh.NumberCell1D;
+        mesh.NumberCell1D++;
+        e2m=Edge(unordered_set<unsigned int> ({idP2, idPmiddle}));
+        unsigned int ide2m=mesh.NumberCell1D;
+        mesh.NumberCell1D++;
+
+        auto PointsNext=mesh.Cell1D[edge->next->RealEdge].points;
+        auto idPNext = findThirdVertex(PointsNext,idP1,idP2);
         Point pNext =mesh.Cell0D[idPNext];
         eNm=Edge(unordered_set<unsigned int> ({idPNext, idPmiddle}));
         unsigned int ideNm=mesh.NumberCell1D;
@@ -319,36 +323,33 @@ namespace ProjectLibrary
         OrientedEdge* oe2Nm = new OrientedEdge(ideNm,idT2);
         oe1Nm->symmetric=oe2Nm;
         oe2Nm->symmetric=oe1Nm;
-        double area0, area1;
-        area0=area(p1,pNext,pmiddle);
-        area1=area(p2,pNext,pmiddle);
-        if(ProjectLibrary::clockwise(mesh,idP1,idPNext,idP2)){
-            t1.vertices={idP1,idPNext,idPmiddle};
-            t2.vertices={idP2,idPNext,idPmiddle};
+        t1.vertices={idP1,idPNext,idPmiddle};
+        t2.vertices={idP2,idPNext,idPmiddle};
+        t1.area=area(p1,pNext,pmiddle);
+        t2.area=area(p2,pNext,pmiddle);
+        bool orientation = ProjectLibrary::clockwise(mesh,idP1,idPNext,idP2);
+        if(orientation){
             t1.edges={idENext,ideNm,ide1m};
             t2.edges={idEPrec,ideNm, ide2m};
-            t1.area=area0;
-            t2.area=area1;
-            OrientedEdge* NextTr2=edge->next->next;
+
+            oe2m->next=oe2Nm;
+            oe2Nm->next=edge->next->next;
+            edge->next->next->next=oe2m;
+
             edge->next->next=oe1Nm;
             oe1Nm->next=oe1m;
             oe1m->next=edge->next;
-            NextTr2->next=oe2m;
-            oe2m->next=oe2Nm;
-            oe2Nm->next=NextTr2;
+
         }else{
-            t1.vertices={idP1,idPNext,idPmiddle};
-            t2.vertices={idP2,idPNext,idPmiddle};
             t1.edges={idEPrec,ideNm,ide1m};
             t2.edges={idENext,ideNm, ide2m};
-            t1.area=area1;
-            t2.area=area0;
-            OrientedEdge* NextTr2=edge->next;
+
             oe1m->next=oe1Nm;
             oe1Nm->next= edge->next->next;
-            edge->next->next=oe1m;
-            oe2m->next=NextTr2;
-            NextTr2->next=oe2Nm;
+            edge->next->next->next=oe1m;
+
+            oe2m->next=edge->next;
+            edge->next->next=oe2Nm;
             oe2Nm->next=oe2m;
         }
         mesh.Cell0D[idPmiddle]=pmiddle;
@@ -361,12 +362,88 @@ namespace ProjectLibrary
         mesh.GraphedMesh.push_back(oe2m);
         mesh.GraphedMesh.push_back(oe1Nm);
         mesh.GraphedMesh.push_back(oe2Nm);
-        mesh.Cell1D.erase(edge->RealEdge);
-        mesh.Cell2D.erase(edge->RealTriangle);
-        auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.begin(),edge);
-        mesh.GraphedMesh.erase(it);
-        delete edge;
-        return true;
+
+        if (edge->symmetric==nullptr){
+            mesh.Cell1D.erase(edge->RealEdge);
+            mesh.Cell2D.erase(edge->RealTriangle);
+            auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.begin(),edge);
+            mesh.GraphedMesh.erase(it);
+            delete edge;
+            return true;
+        }else{
+            auto PointsNext=mesh.Cell1D[edge->symmetric->next->RealEdge].points;
+            auto idPPrec = findThirdVertex(PointsNext,idP1,idP2);
+            Point pPrec = mesh.Cell0D[idPPrec];
+            Edge ePm = Edge(unordered_set<unsigned int> ({idPPrec, idPmiddle}));
+            unsigned int idePm=mesh.NumberCell1D;
+            mesh.NumberCell1D++;
+            Triangle t3,t4;
+            unsigned int idT3=mesh.NumberCell2D;
+            mesh.NumberCell2D++;
+            unsigned int idT4=mesh.NumberCell2D;
+            mesh.NumberCell2D++;
+            unsigned int idEPNext, idEPPrec;
+            idEPNext=edge->symmetric->next->RealEdge;
+            idEPPrec=edge->symmetric->next->next->RealEdge;
+            OrientedEdge* oeP1m = new OrientedEdge(ide1m,idT3);
+            OrientedEdge* oeP2m = new OrientedEdge(ide2m,idT4);
+            OrientedEdge* oeP1Pm = new OrientedEdge(idePm,idT3);
+            OrientedEdge* oeP2Pm = new OrientedEdge(idePm,idT4);
+            oeP1Pm->symmetric=oeP2Pm;
+            oeP2Pm->symmetric=oeP1Pm;
+            t3.area=area(p1,pPrec,pmiddle);
+            t4.area=area(p2,pPrec,pmiddle);
+            t3.vertices={idP1,idPPrec,idPmiddle};
+            t4.vertices={idP2,idPPrec,idPmiddle};
+            if(orientation){
+                t3.edges={idEPPrec,idePm,ide1m};
+                t4.edges={idEPNext,idePm, ide2m};
+
+                oeP1m->next= oeP1Pm;
+                oeP1Pm->next=edge->next->next;
+                edge->next->next->next=oeP1m;
+
+                oeP2m->next=edge->next;
+                edge->next->next=oeP2Pm;
+                oeP2Pm->next=oeP2m;
+            }else{
+                t3.edges={idEPNext,idePm,ide1m};
+                t4.edges={idEPPrec,idePm, ide2m};
+
+                oeP2m->next=oeP2Pm;
+                oeP2Pm->next=edge->next->next;
+                edge->next->next->next=oeP2m;
+
+                oeP1m->next=edge->next;
+                edge->next->next=oeP1Pm;
+                oeP1Pm->next=oeP1m;
+            }
+            oeP1m->symmetric=oe1m;
+            oe1m->symmetric=oeP1m;
+            oeP2m->symmetric=oe2m;
+            oe2m->symmetric=oeP2m;
+
+            mesh.Cell1D[idePm]=ePm;
+            mesh.Cell2D[idT3]=t3;
+            mesh.Cell2D[idT4]=t4;
+            mesh.GraphedMesh.push_back(oeP1m);
+            mesh.GraphedMesh.push_back(oeP2m);
+            mesh.GraphedMesh.push_back(oeP1Pm);
+            mesh.GraphedMesh.push_back(oeP2Pm);
+
+            mesh.Cell1D.erase(edge->RealEdge);
+            mesh.Cell2D.erase(edge->RealTriangle);
+            mesh.Cell1D.erase(edge->symmetric->RealEdge);
+            mesh.Cell2D.erase(edge->symmetric->RealTriangle);
+            auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.begin(),edge->symmetric);
+            mesh.GraphedMesh.erase(it);
+            delete edge->symmetric;
+            return true;
+            it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.begin(),edge);
+            mesh.GraphedMesh.erase(it);
+            delete edge;
+            return true;
+        }
     }
 
     //***************************************************************************
