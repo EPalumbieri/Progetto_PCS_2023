@@ -560,4 +560,25 @@ namespace ProjectLibrary
          return true;
     }
 
+    void getStartingTriangles(Mesh &mesh, unsigned int n)
+    {
+        vector< decltype(mesh.Cell2D)::iterator> its;
+        its.reserve(mesh.Cell2D.size());
+        for(auto it = mesh.Cell2D.begin(); it != mesh.Cell2D.end(); ++it)
+            its.push_back(it);
+
+        sort(its.begin(), its.end(),
+                      [](decltype(mesh.Cell2D)::iterator & lhs, decltype(mesh.Cell2D)::iterator &rhs) {
+                          return lhs->second.area > rhs->second.area;
+                      });
+        std::vector<unsigned int> vec;
+        vec.reserve(its.size());
+        std::transform(its.begin(), its.end(), std::back_inserter(vec),
+                       [](decltype(mesh.Cell2D)::iterator it) {
+                           return it->first;
+                       });
+        for (unsigned int i=0; i<n;i++){
+            mesh.StartingTriangles.push_back(vec[i]);
+        }
+    }
 }

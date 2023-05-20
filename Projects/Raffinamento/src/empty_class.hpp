@@ -8,6 +8,7 @@
 #include "map"
 #include <algorithm>
 #include <unordered_set>
+#include <iterator>
 
 using namespace std;
 using namespace Eigen;
@@ -102,7 +103,16 @@ namespace ProjectLibrary
         map<unsigned int, Triangle> Cell2D = {}; ///< Cell2D id, size 1 x NumberCell2D
 
         vector<OrientedEdge*> GraphedMesh;
+
+        vector<unsigned int> StartingTriangles;
     };
+
+    inline bool compareByArea(const Triangle &t1, const Triangle &t2)
+    {
+        return (t1.area < t2.area);
+    }
+
+    void getStartingTriangles(Mesh &mesh, unsigned int n);
 
     bool clockwise(Point P1, Point P2, Point P3);
 
