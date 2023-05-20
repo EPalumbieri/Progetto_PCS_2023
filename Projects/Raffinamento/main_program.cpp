@@ -17,7 +17,6 @@ int main()
       cout<<mesh.Cell2D[mesh.StartingTriangles[i]].area<<endl;
   }
 
-  bisect(mesh,*(mesh.GraphedMesh.begin()));
   bisect(mesh,*(mesh.GraphedMesh.begin()+10));
   bisect(mesh,*(mesh.GraphedMesh.begin()+20));
   bisect(mesh,*(mesh.GraphedMesh.begin()+30));
