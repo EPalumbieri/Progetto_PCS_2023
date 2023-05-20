@@ -128,6 +128,12 @@ namespace ProjectLibrary
 
     bool bisect(Mesh& mesh,OrientedEdge* edge);
 
+    void getStartingTriangles(Mesh &mesh, unsigned int n);
+
+    OrientedEdge* getBiggestEdge(Mesh &mesh, unsigned int idTriangle);
+
+    OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge);
+
     ///\brief Import the triangular mesh and test if the mesh is correct
     ///\param mesh: a TriangularMesh struct
     ///\return the result of the reading, true if is success, false otherwise

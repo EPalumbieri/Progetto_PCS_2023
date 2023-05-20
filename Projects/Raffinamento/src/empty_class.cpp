@@ -244,19 +244,19 @@ namespace ProjectLibrary
       return (sqrt(normSquared(p1.x - p2.x, p1.y - p2.y)));
     }
 
-    double length(Mesh& mesh,OrientedEdge* edge){
-        auto a=mesh.Cell1D[edge->RealEdge].points;
+    double length(Mesh& mesh,unsigned int edge){
+        auto a=mesh.Cell1D[edge].points;
         auto p1= mesh.Cell0D[*a.begin()];
         auto p2= mesh.Cell0D[*a.end()];
         return distance(p1,p2);
     }
 
     bool isLongest(Mesh& mesh,OrientedEdge* edge){
-        double edgelength=length(mesh, edge);
+        double edgelength=length(mesh, edge->RealEdge);
         double max=edgelength;
         for(int i=0; i<2; i++){
             edge=edge->next;
-            double ltemp = length(mesh,edge);
+            double ltemp = length(mesh,edge->RealEdge);
             max = (max<ltemp) ? ltemp : max;
         }
         return (max==edgelength);
@@ -285,6 +285,30 @@ namespace ProjectLibrary
         }
         return idPNext;
     }
+
+    OrientedEdge* getBiggestEdge(Mesh &mesh, unsigned int idTriangle){
+        double max=-1;
+        unsigned int idMax = 0;
+        for(int i=0; i<3;i++){
+            double tmp=length(mesh,mesh.Cell2D[idTriangle].edges[i]);
+            if(max<tmp){
+                max=tmp;
+                idMax=mesh.Cell2D[idTriangle].edges[i];
+            }
+        }
+        return getOrientedEdge(mesh,idTriangle, idMax);
+    }
+
+    OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge){
+
+        for ( auto it=mesh.GraphedMesh.begin();it!=mesh.GraphedMesh.end();it++){
+            if(((*it)->RealTriangle==idTriangle)&((*it)->RealEdge==idEdge)){
+                return (*it);
+            }
+        }
+        return nullptr;
+    }
+
     bool bisect(Mesh& mesh,OrientedEdge* edge){
         auto a=mesh.Cell1D[edge->RealEdge].points;
         unsigned int idP1= *a.begin();
