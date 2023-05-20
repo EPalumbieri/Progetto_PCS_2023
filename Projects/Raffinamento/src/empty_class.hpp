@@ -122,21 +122,24 @@ namespace ProjectLibrary
     ///\param mesh: a TriangularMesh struct
     ///\return the result of the reading, true if is success, false otherwise
     bool ImportMesh(Mesh& mesh, string file0D, string file1D, string file2D);
-
+    bool ExportMesh(Mesh& mesh, string file0D, string file1D, string file2D);
     ///\brief Import the Cell0D properties from Cell0Ds.csv file
     ///\param mesh: a TriangularMesh struct
     ///\return the result of the reading, true if is success, false otherwise
     bool ImportCell0Ds(Mesh& mesh, string nomeFile);
+    bool ExportCell0Ds(Mesh& mesh, string nomeFile);
 
     ///\brief Import the Cell1D properties from Cell1Ds.csv file
     ///\param mesh: a TriangularMesh struct
     ///\return the result of the reading, true if is success, false otherwise
     bool ImportCell1Ds(Mesh& mesh, string nomeFile);
+    bool ExportCell1Ds(Mesh& mesh, string nomeFile);
 
     ///\brief Import the Cell2D properties from Cell2Ds.csv file
     ///\param mesh: a TriangularMesh struct
     ///\return the result of the reading, true if is success, false otherwise
     bool ImportCell2Ds(Mesh& mesh, string nomeFile);
+    bool ExportCell2Ds(Mesh& mesh, string nomeFile);
 }
 
 #endif // __EMPTY_H
