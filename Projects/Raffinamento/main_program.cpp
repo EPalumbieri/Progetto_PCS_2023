@@ -9,10 +9,12 @@ int main()
   {
     return 1;
   }
-  for( auto it=mesh.GraphedMesh.begin();it !=mesh.GraphedMesh.end();it++)
+  if(!ExportMesh(mesh,"../Raffinamento/Dataset/Test1/NewCell0Ds.csv","../Raffinamento/Dataset/Test1/NewCell1Ds.csv", "../Raffinamento/Dataset/Test1/NewCell2Ds.csv"))
   {
-      //if((*it)->symmetric==(*it))
-      cout<<((*it)->next->next->next==(*it));
+    return 1;
   }
+  //system("cd ../Raffinamento/Dataset/Test1" );
+  //system("dir");
+  system("python ../Raffinamento/Dataset/Test1/RenderScript.py");
   return 0;
 }

@@ -245,23 +245,111 @@ namespace ProjectLibrary
 
       if(!ImportCell0Ds(mesh,file0D))
       {
-        cerr<<"FailedCell0";
+        cerr<<"FailedImportCell0";
         return false;
       }
 
       if(!ImportCell1Ds(mesh,file1D))
       {
-        cerr<<"FailedCell1";
+        cerr<<"FailedImportCell1";
         return false;
       }
 
       if(!ImportCell2Ds(mesh,file2D))
       {
-        cerr<<"FailedCell2";
+        cerr<<"FailedImportCell2";
         return false;
       }
 
       return true;
 
     }
+
+    bool ExportMesh(Mesh &mesh, string file0D, string file1D, string file2D)
+    {
+        if(!ExportCell0Ds(mesh,file0D))
+        {
+          cerr<<"FailedExportCell0";
+          return false;
+        }
+
+        if(!ExportCell1Ds(mesh,file1D))
+        {
+          cerr<<"FailedExportCell1";
+          return false;
+        }
+
+        if(!ExportCell2Ds(mesh,file2D))
+        {
+          cerr<<"FailedExportCell2";
+          return false;
+        }
+
+        return true;
+
+    }
+
+    bool ExportCell0Ds(Mesh &mesh, string nomeFile)
+    {
+        ofstream file;
+        file.open(nomeFile);
+
+        if(file.fail())
+        {
+          cerr<<"wrong file";
+          return false;
+        }
+
+        file<<"Id X Y\n";
+                for(unsigned int i=0;i<mesh.Cell0D.size();i++)
+                {
+                 Point p=mesh.Cell0D[i];
+                 file<<i<<" "<<p.x<<" "<<p.y<<"\n";
+                }
+         return true;
+    }
+
+    bool ExportCell1Ds(Mesh &mesh, string nomeFile)
+    {
+        ofstream file;
+        file.open(nomeFile);
+
+        if(file.fail())
+        {
+          cerr<<"wrong file";
+          return false;
+        }
+
+        file<<"Id Origin End\n";
+                for(unsigned int i=0;i<mesh.Cell1D.size();i++)
+                {
+                 Edge e=mesh.Cell1D[i];
+                 file<<i;
+                 for(auto it=e.points.begin();it!= e.points.end();it++)
+                  file<<" "<<*it;
+                 file<<"\n";
+                }
+         return true;
+    }
+    bool ExportCell2Ds(Mesh &mesh, string nomeFile)
+    {
+        ofstream file;
+        file.open(nomeFile);
+
+        if(file.fail())
+        {
+          cerr<<"wrong file";
+          return false;
+        }
+
+        file<<"Id Vertices Edges\n";
+                for(unsigned int i=0;i<mesh.Cell2D.size();i++)
+                {
+                 Triangle t=mesh.Cell2D[i];
+                 file<<i<<" "<<t.vertices[0]<<" "<<t.vertices[1]<<" "<<t.vertices[2]
+                        <<" "<<t.edges[0]<<" "<<t.edges[1]<<" "<<t.edges[2]<<"\n";
+                }
+         return true;
+    }
+
 }
