@@ -1,6 +1,7 @@
 #ifndef __EMPTY_H
 #define __EMPTY_H
 
+#include <cmath>
 #include <iostream>
 #include "Eigen/Eigen"
 #include <fstream>
@@ -13,9 +14,22 @@ using namespace Eigen;
 
 namespace ProjectLibrary
 {
+
+
     struct Edge
     {
         std::unordered_set<unsigned int> points;
+        void operator=(unordered_set<unsigned int> sett)
+        {
+            points=sett;
+        }
+        Edge()
+        {
+
+        }
+        Edge(unordered_set<unsigned int> sett):points(sett)
+        {
+        }
     };
 
     struct Triangle
@@ -44,6 +58,7 @@ namespace ProjectLibrary
         double x;
         double y;
 
+
         Point(const double& x,
               const double& y):
           x(x), y(y)
@@ -67,6 +82,12 @@ namespace ProjectLibrary
 
     };
 
+    inline double normSquared(const double& x, const double& y)
+    {
+      return x * x + y * y;
+    }
+
+
     struct Mesh
     {
         unsigned int NumberCell0D = 0; ///< number of Cell0D
@@ -86,6 +107,16 @@ namespace ProjectLibrary
     bool clockwise(Point P1, Point P2, Point P3);
 
     double Area(Triangle triangle);
+
+    double distance(const Point& p1, const Point& p2);
+
+    double length(Mesh& mesh,OrientedEdge* edge);
+
+    bool isLongest(Mesh& mesh,OrientedEdge* edge);
+
+    Point midpoint(const Point& p1, const Point& p2);
+
+    bool bisect(Mesh& mesh,OrientedEdge* edge);
 
     ///\brief Import the triangular mesh and test if the mesh is correct
     ///\param mesh: a TriangularMesh struct

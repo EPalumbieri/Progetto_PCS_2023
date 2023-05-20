@@ -239,6 +239,136 @@ namespace ProjectLibrary
       return true;
     }
 
+    inline double distance(const Point& p1, const Point& p2)
+    {
+      return (sqrt(normSquared(p1.x - p2.x, p1.y - p2.y)));
+    }
+
+    double length(Mesh& mesh,OrientedEdge* edge){
+        auto a=mesh.Cell1D[edge->RealEdge].points;
+        auto p1= mesh.Cell0D[*a.begin()];
+        auto p2= mesh.Cell0D[*a.end()];
+        return distance(p1,p2);
+    }
+
+    bool isLongest(Mesh& mesh,OrientedEdge* edge){
+        double edgelength=length(mesh, edge);
+        double max=edgelength;
+        for(int i=0; i<2; i++){
+            edge=edge->next;
+            double ltemp = length(mesh,edge);
+            max = (max<ltemp) ? ltemp : max;
+        }
+        return (max==edgelength);
+    }
+
+    Point midpoint(const Point& p1, const Point& p2){
+        return(Point((p1.x+p2.x)/2,(p1.y+p2.y)/2));
+    }
+
+
+    bool bisectNoSymmetric(Mesh& mesh,OrientedEdge* edge){
+        auto a=mesh.Cell1D[edge->RealEdge].points;
+        unsigned int idP1= *a.begin();
+        unsigned int idP2= *(++a.begin());
+        Point p1= mesh.Cell0D[idP1];
+        Point p2= mesh.Cell0D[idP2];
+        Point pmiddle=midpoint(p1,p2);
+        unsigned int idPmiddle=mesh.NumberCell0D;
+        mesh.NumberCell0D++;
+        auto PointsNext=mesh.Cell1D[edge->next->RealEdge].points;
+        auto itN1 = PointsNext.find(idP1);
+        auto itN2 = PointsNext.find(idP2);
+        unsigned int idENext, idEPrec;
+        idENext=edge->next->RealEdge;
+        idEPrec=edge->next->next->RealEdge;
+        Edge e1m,e2m,eNm;
+        e1m=Edge(unordered_set<unsigned int> ({idP1, idPmiddle}));
+        unsigned int ide1m=mesh.NumberCell1D;
+        mesh.NumberCell1D++;
+        e2m=Edge(unordered_set<unsigned int> ({idP2, idPmiddle}));
+        unsigned int ide2m=mesh.NumberCell1D;
+        mesh.NumberCell1D++;
+        unsigned int idPNext;
+        if(itN1 != PointsNext.end()){
+            if (itN1 == PointsNext.begin()){
+                idPNext= *(++PointsNext.begin());
+            }else{
+                idPNext= *(PointsNext.begin());
+            }
+        }else{
+            if (itN2 == PointsNext.begin()){
+                idPNext= *(++PointsNext.begin());
+            }else{
+                idPNext= *(PointsNext.begin());
+            }
+        }
+        Point pNext =mesh.Cell0D[idPNext];
+        eNm=Edge(unordered_set<unsigned int> ({idPNext, idPmiddle}));
+        unsigned int ideNm=mesh.NumberCell1D;
+        mesh.NumberCell1D++;
+
+        Triangle t1,t2;
+        unsigned int idT1=mesh.NumberCell2D;
+        mesh.NumberCell2D++;
+        unsigned int idT2=mesh.NumberCell2D;
+        mesh.NumberCell2D++;
+        OrientedEdge* oe1m = new OrientedEdge(ide1m,idT1);
+        OrientedEdge* oe2m = new OrientedEdge(ide2m,idT2);
+        OrientedEdge* oe1Nm = new OrientedEdge(ideNm,idT1);
+        OrientedEdge* oe2Nm = new OrientedEdge(ideNm,idT2);
+        oe1Nm->symmetric=oe2Nm;
+        oe2Nm->symmetric=oe1Nm;
+        double area0, area1;
+        area0=area(p1,pNext,pmiddle);
+        area1=area(p2,pNext,pmiddle);
+        if(ProjectLibrary::clockwise(mesh,idP1,idPNext,idP2)){
+            t1.vertices={idP1,idPNext,idPmiddle};
+            t2.vertices={idP2,idPNext,idPmiddle};
+            t1.edges={idENext,ideNm,ide1m};
+            t2.edges={idEPrec,ideNm, ide2m};
+            t1.area=area0;
+            t2.area=area1;
+            OrientedEdge* NextTr2=edge->next->next;
+            edge->next->next=oe1Nm;
+            oe1Nm->next=oe1m;
+            oe1m->next=edge->next;
+            NextTr2->next=oe2m;
+            oe2m->next=oe2Nm;
+            oe2Nm->next=NextTr2;
+        }else{
+            t1.vertices={idP1,idPNext,idPmiddle};
+            t2.vertices={idP2,idPNext,idPmiddle};
+            t1.edges={idEPrec,ideNm,ide1m};
+            t2.edges={idENext,ideNm, ide2m};
+            t1.area=area1;
+            t2.area=area0;
+            OrientedEdge* NextTr2=edge->next;
+            oe1m->next=oe1Nm;
+            oe1Nm->next= edge->next->next;
+            edge->next->next=oe1m;
+            oe2m->next=NextTr2;
+            NextTr2->next=oe2Nm;
+            oe2Nm->next=oe2m;
+        }
+        mesh.Cell0D[idPmiddle]=pmiddle;
+        mesh.Cell1D[ide1m]=e1m;
+        mesh.Cell1D[ide2m]=e2m;
+        mesh.Cell1D[ideNm]=eNm;
+        mesh.Cell2D[idT1]=t1;
+        mesh.Cell2D[idT2]=t2;
+        mesh.GraphedMesh.push_back(oe1m);
+        mesh.GraphedMesh.push_back(oe2m);
+        mesh.GraphedMesh.push_back(oe1Nm);
+        mesh.GraphedMesh.push_back(oe2Nm);
+        mesh.Cell1D.erase(edge->RealEdge);
+        mesh.Cell2D.erase(edge->RealTriangle);
+        auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.begin(),edge);
+        mesh.GraphedMesh.erase(it);
+        delete edge;
+        return true;
+    }
+
     //***************************************************************************
     bool ImportMesh(Mesh& mesh, string file0D, string file1D, string file2D)
     {

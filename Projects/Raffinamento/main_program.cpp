@@ -12,7 +12,6 @@ int main()
   for( auto it=mesh.GraphedMesh.begin();it !=mesh.GraphedMesh.end();it++)
   {
       //if((*it)->symmetric==(*it))
-      cout<<mesh.Cell2D[(*it)->RealTriangle].area<<endl;
   }
   return 0;
 }
