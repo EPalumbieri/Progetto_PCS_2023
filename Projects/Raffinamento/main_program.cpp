@@ -9,7 +9,7 @@ int main()
   {
     return 1;
   }
-  getStartingTriangles(mesh,10);
+  getStartingTriangles(mesh,100);
 
   ProjectLibrary::Globalrefine(mesh);
 //  for (int i=0;i<mesh.NumberCell2D;i++)
@@ -30,6 +30,6 @@ int main()
   //system("cd ../Raffinamento/Dataset/Test1" );
   //system("dir");
   //system("py C:/Users/filip/Desktop/Progetto_PCS_2023/Projects/Raffinamento/Dataset/Test1/RenderScript.py");
-  system("python ../Raffinamento/Dataset/Test1/RenderScript.py");
+  system("py ../Raffinamento/Dataset/Test1/RenderScript.py");
   return 0;
 }

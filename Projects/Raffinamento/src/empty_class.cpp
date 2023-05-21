@@ -7,7 +7,7 @@ namespace ProjectLibrary
       Point P0=Point(mesh.Cell0D[id1]);
       Point P1=Point(mesh.Cell0D[id2]);
       Point P2=Point(mesh.Cell0D[id3]);
-      return (P1.x - P0.x)*(P2.y - P0.y) - (P2.x - P0.x)*(P1.y - P0.y)>0;
+      return (!((P1.x - P0.x)*(P2.y - P0.y) - (P2.x - P0.x)*(P1.y - P0.y)>0));
     }
 
     double area(const Point& P1,
@@ -402,9 +402,11 @@ namespace ProjectLibrary
             delete edge;
             return true;
         }else{
+            cout<<endl<<edge->RealTriangle<<endl<<edge->symmetric->RealTriangle<<endl;
             auto itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->symmetric->RealTriangle);
             if(itT != mesh.StartingTriangles.end()){
                 mesh.StartingTriangles.erase(itT);
+                cout<<"ciao"<<endl;
             }
             itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->RealTriangle);
             if(itT != mesh.StartingTriangles.end()){
@@ -502,26 +504,26 @@ namespace ProjectLibrary
             unsigned int triangle=*(mesh.StartingTriangles.end()-1);
             mesh.StartingTriangles.pop_back();
             refine(mesh,triangle);
+            for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
+                cout<<"Refinement Head"<<*it<<endl;
+            }
+            cout<<endl;
         }
     }
 
     void refine(Mesh& mesh,unsigned int triangle)
     {
-        cout<<"refining triangle:"<<triangle<<endl;
         OrientedEdge* longestEdge=getBiggestEdge(mesh,triangle);
         if(longestEdge->symmetric==nullptr)
         {
-            cout<<"borderTriangle\n\n";
             bisect(mesh,longestEdge) ;
             return;
         }
         else
             {
-                cout<<"next"<<longestEdge->symmetric->RealTriangle<<endl;
                 OrientedEdge* nextLongest=getBiggestEdge(mesh,longestEdge->symmetric->RealTriangle);
                 if (nextLongest->symmetric==longestEdge)
                 {
-                    cout<<"mustBisectHere into"<<longestEdge->symmetric->RealTriangle<<"\n\n";
                     bisect(mesh,longestEdge);
                     return;
                 }
