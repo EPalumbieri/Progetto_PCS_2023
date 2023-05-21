@@ -395,11 +395,7 @@ namespace ProjectLibrary
         mesh.GraphedMesh.push_back(oe2Nm);
 
         if (edge->symmetric==nullptr){
-            mesh.Cell1D.erase(edge->RealEdge);
-            mesh.Cell2D.erase(edge->RealTriangle);
-            auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.end(),edge);
-            mesh.GraphedMesh.erase(it);
-            delete edge;
+            mesh.trial.push_back(edge);
             return true;
         }else{
             auto itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->symmetric->RealTriangle);
@@ -442,11 +438,11 @@ namespace ProjectLibrary
                 t4.edges={idEPNext,idePm, ide2m};
 
                 oeP1m->next= oeP1Pm;
-                oeP1Pm->next=edge->next->next;
-                edge->next->next->next=oeP1m;
+                oeP1Pm->next=edge->symmetric->next->next;
+                edge->symmetric->next->next->next=oeP1m;
 
-                oeP2m->next=edge->next;
-                edge->next->next=oeP2Pm;
+                oeP2m->next=edge->symmetric->next;
+                edge->symmetric->next->next=oeP2Pm;
                 oeP2Pm->next=oeP2m;
             }else{
                 edge->symmetric->next->RealTriangle=idT3;
@@ -456,11 +452,11 @@ namespace ProjectLibrary
                 t4.edges={idEPPrec,idePm, ide2m};
 
                 oeP2m->next=oeP2Pm;
-                oeP2Pm->next=edge->next->next;
-                edge->next->next->next=oeP2m;
+                oeP2Pm->next=edge->symmetric->next->next;
+                edge->symmetric->next->next->next=oeP2m;
 
-                oeP1m->next=edge->next;
-                edge->next->next=oeP1Pm;
+                oeP1m->next=edge->symmetric->next;
+                edge->symmetric->next->next=oeP1Pm;
                 oeP1Pm->next=oeP1m;
             }
             oeP1m->symmetric=oe1m;
@@ -475,19 +471,6 @@ namespace ProjectLibrary
             mesh.GraphedMesh.push_back(oeP2m);
             mesh.GraphedMesh.push_back(oeP1Pm);
             mesh.GraphedMesh.push_back(oeP2Pm);
-
-            mesh.Cell1D.erase(edge->RealEdge);
-            mesh.Cell2D.erase(edge->RealTriangle);
-            mesh.Cell1D.erase(edge->symmetric->RealEdge);
-            mesh.Cell2D.erase(edge->symmetric->RealTriangle);
-            auto it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.end(),edge->symmetric);
-            mesh.GraphedMesh.erase(it);
-            delete edge->symmetric;
-            return true;
-            it= find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.end(),edge);
-            mesh.GraphedMesh.erase(it);
-            delete edge;
-            return true;
         }
     }
 
@@ -499,15 +482,23 @@ namespace ProjectLibrary
         //for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
 
         while (!mesh.StartingTriangles.empty()) {
+            for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
+                cout<<"Refinement Head"<<*it<<endl;
+            }
             unsigned int triangle=*(mesh.StartingTriangles.end()-1);
             mesh.StartingTriangles.pop_back();
-            if(std::find(mesh.DestroyedTriangles.begin(),mesh.DestroyedTriangles.end(),triangle)==mesh.DestroyedTriangles.end())
-            refine(mesh,triangle);
+            if(std::find(mesh.DestroyedTriangles.begin(),mesh.DestroyedTriangles.end(),triangle)==mesh.DestroyedTriangles.end()){
+            OrientedEdge* edge = getOrientedEdge(mesh,triangle,mesh.Cell2D[triangle].edges[0]);
+            refine(mesh,edge);
+            }
         }
     }
 
-    void refine(Mesh& mesh,unsigned int triangle)
+    void refine(Mesh& mesh,OrientedEdge* edge)
     {
+        int i=0;
+        cout<<edge->next<<endl;
+        unsigned int triangle=edge->RealTriangle;
         cout<<"refining triangle:"<<triangle<<endl;
         OrientedEdge* longestEdge=getBiggestEdge(mesh,triangle);
         if(longestEdge->symmetric==nullptr)
@@ -515,6 +506,7 @@ namespace ProjectLibrary
             cout<<"borderTriangle\n\n";
             mesh.DestroyedTriangles.push_back(triangle);
             bisect(mesh,longestEdge) ;
+            i++;
             return;
         }
         else
@@ -527,15 +519,16 @@ namespace ProjectLibrary
                     mesh.DestroyedTriangles.push_back(triangle);
                     mesh.DestroyedTriangles.push_back(longestEdge->symmetric->RealTriangle);
                     bisect(mesh,longestEdge);
+                    i++;
                     return;
                 }
                 else
                 {
-                    refine(mesh,nextLongest->RealTriangle);
+                    refine(mesh,nextLongest);
                     if(std::find(mesh.DestroyedTriangles.begin(),mesh.DestroyedTriangles.end(),triangle)==mesh.DestroyedTriangles.end())
                      {
-                        cout<<"Returning to"<<triangle;
-                        refine(mesh,triangle);
+                        cout<<"Returning to"<<edge->RealTriangle;
+                        refine(mesh,edge);
                     }
                     return;
                 }

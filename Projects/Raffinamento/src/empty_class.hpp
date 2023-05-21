@@ -103,6 +103,7 @@ namespace ProjectLibrary
         map<unsigned int, Triangle> Cell2D = {}; ///< Cell2D id, size 1 x NumberCell2D
 
         vector<OrientedEdge*> GraphedMesh;
+        vector<OrientedEdge*> trial;
 
         vector<unsigned int> StartingTriangles;
         vector<unsigned int> DestroyedTriangles;
@@ -127,7 +128,7 @@ namespace ProjectLibrary
 
     void getStartingTriangles(Mesh &mesh, unsigned int n);
 
-    unsigned int findThirdVertex(unordered_set<unsigned int> PointsNext, unsigned int idP1, unsigned int idP2);
+    unsigned int findThirdVertex(unordered_set<unsigned int> v, unsigned int idP1, unsigned int idP2);
 
     OrientedEdge* getBiggestEdge(Mesh &mesh, unsigned int idTriangle);
 
@@ -135,7 +136,7 @@ namespace ProjectLibrary
 
     void Globalrefine(Mesh& mesh);
 
-    void refine(Mesh& mesh,unsigned int triangle);
+    void refine(Mesh& mesh,OrientedEdge* edge);
 
     ///\brief Import the triangular mesh and test if the mesh is correct
     ///\param mesh: a TriangularMesh struct
