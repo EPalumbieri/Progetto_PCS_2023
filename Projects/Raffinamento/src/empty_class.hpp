@@ -132,6 +132,10 @@ namespace ProjectLibrary
 
     OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge);
 
+    void Globalrefine(Mesh& mesh);
+
+    void refine(Mesh& mesh,unsigned int triangle);
+
     ///\brief Import the triangular mesh and test if the mesh is correct
     ///\param mesh: a TriangularMesh struct
     ///\return the result of the reading, true if is success, false otherwise

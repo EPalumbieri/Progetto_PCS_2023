@@ -303,7 +303,7 @@ namespace ProjectLibrary
     OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge){
 
         for ( auto it=mesh.GraphedMesh.begin();it!=mesh.GraphedMesh.end();it++){
-            if(((*it)->RealTriangle==idTriangle)&((*it)->RealEdge==idEdge)){
+            if(((*it)->RealTriangle==idTriangle)&&((*it)->RealEdge==idEdge)){
                 return (*it);
             }
         }
@@ -400,6 +400,10 @@ namespace ProjectLibrary
             if(itT != mesh.StartingTriangles.end()){
                 mesh.StartingTriangles.erase(itT);
             }
+            itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->RealTriangle);
+            if(itT != mesh.StartingTriangles.end()){
+                mesh.StartingTriangles.erase(itT);
+            }
             auto PointsNext=mesh.Cell1D[edge->symmetric->next->RealEdge].points;
             auto idPPrec = findThirdVertex(PointsNext,idP1,idP2);
             Point pPrec = mesh.Cell0D[idPPrec];
@@ -474,6 +478,54 @@ namespace ProjectLibrary
             return true;
         }
     }
+
+    void Globalrefine(Mesh& mesh)
+    {
+        for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
+            cout<<"Refinement Head"<<*it<<endl;
+        }
+        //for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
+
+        while (!mesh.StartingTriangles.empty()) {
+            unsigned int triangle=*(mesh.StartingTriangles.end()-1);
+            mesh.StartingTriangles.pop_back();
+            refine(mesh,triangle);
+        }
+    }
+
+    void refine(Mesh& mesh,unsigned int triangle)
+    {
+        cout<<"refining triangle:"<<triangle<<endl;
+        OrientedEdge* longestEdge=getBiggestEdge(mesh,triangle);
+        if(longestEdge->symmetric==nullptr)
+        {
+            cout<<"borderTriangle\n\n";
+            bisect(mesh,longestEdge) ;
+            return;
+        }
+        else
+            {
+                cout<<"next"<<longestEdge->symmetric->RealTriangle<<endl;
+                OrientedEdge* nextLongest=getBiggestEdge(mesh,longestEdge->symmetric->RealTriangle);
+                if (nextLongest->symmetric==longestEdge)
+                {
+                    cout<<"mustBisectHere into"<<longestEdge->symmetric->RealTriangle<<"\n\n";
+                    bisect(mesh,longestEdge);
+                    return;
+                }
+                else
+                {
+                    refine(mesh,nextLongest->RealTriangle);
+                    refine(mesh,triangle);
+                    return;
+                }
+
+            }
+
+
+
+    }
+
 
     //***************************************************************************
     bool ImportMesh(Mesh& mesh, string file0D, string file1D, string file2D)
