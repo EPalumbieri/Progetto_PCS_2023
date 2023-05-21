@@ -354,6 +354,9 @@ namespace ProjectLibrary
         t2.area=area(p2,pNext,pmiddle);
         bool orientation = ProjectLibrary::clockwise(mesh,idP1,idPNext,idP2);
         if(orientation){
+            edge->next->RealTriangle=idT1;
+            edge->next->next->RealTriangle=idT2;
+
             t1.edges={idENext,ideNm,ide1m};
             t2.edges={idEPrec,ideNm, ide2m};
 
@@ -366,6 +369,9 @@ namespace ProjectLibrary
             oe1m->next=edge->next;
 
         }else{
+            edge->next->next->RealTriangle=idT1;
+            edge->next->RealTriangle=idT2;
+
             t1.edges={idEPrec,ideNm,ide1m};
             t2.edges={idENext,ideNm, ide2m};
 
@@ -429,6 +435,9 @@ namespace ProjectLibrary
             t3.vertices={idP1,idPPrec,idPmiddle};
             t4.vertices={idP2,idPPrec,idPmiddle};
             if(orientation){
+                edge->symmetric->next->RealTriangle=idT4;
+                edge->symmetric->next->next->RealTriangle=idT3;
+
                 t3.edges={idEPPrec,idePm,ide1m};
                 t4.edges={idEPNext,idePm, ide2m};
 
@@ -440,6 +449,9 @@ namespace ProjectLibrary
                 edge->next->next=oeP2Pm;
                 oeP2Pm->next=oeP2m;
             }else{
+                edge->symmetric->next->RealTriangle=idT3;
+                edge->symmetric->next->next->RealTriangle=idT4;
+
                 t3.edges={idEPNext,idePm,ide1m};
                 t4.edges={idEPPrec,idePm, ide2m};
 
