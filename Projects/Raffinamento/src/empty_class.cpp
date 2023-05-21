@@ -7,7 +7,7 @@ namespace ProjectLibrary
       Point P0=Point(mesh.Cell0D[id1]);
       Point P1=Point(mesh.Cell0D[id2]);
       Point P2=Point(mesh.Cell0D[id3]);
-      return (P1.x - P0.x)*(P2.y - P0.y) - (P2.x - P0.x)*(P1.y - P0.y)>0;
+      return !((P1.x - P0.x)*(P2.y - P0.y) - (P2.x - P0.x)*(P1.y - P0.y)>0);
     }
 
     double area(const Point& P1,
@@ -501,6 +501,7 @@ namespace ProjectLibrary
         while (!mesh.StartingTriangles.empty()) {
             unsigned int triangle=*(mesh.StartingTriangles.end()-1);
             mesh.StartingTriangles.pop_back();
+            if(std::find(mesh.DestroyedTriangles.begin(),mesh.DestroyedTriangles.end(),triangle)==mesh.DestroyedTriangles.end())
             refine(mesh,triangle);
         }
     }
@@ -512,6 +513,7 @@ namespace ProjectLibrary
         if(longestEdge->symmetric==nullptr)
         {
             cout<<"borderTriangle\n\n";
+            mesh.DestroyedTriangles.push_back(triangle);
             bisect(mesh,longestEdge) ;
             return;
         }
@@ -522,13 +524,19 @@ namespace ProjectLibrary
                 if (nextLongest->symmetric==longestEdge)
                 {
                     cout<<"mustBisectHere into"<<longestEdge->symmetric->RealTriangle<<"\n\n";
+                    mesh.DestroyedTriangles.push_back(triangle);
+                    mesh.DestroyedTriangles.push_back(longestEdge->symmetric->RealTriangle);
                     bisect(mesh,longestEdge);
                     return;
                 }
                 else
                 {
                     refine(mesh,nextLongest->RealTriangle);
-                    refine(mesh,triangle);
+                    if(std::find(mesh.DestroyedTriangles.begin(),mesh.DestroyedTriangles.end(),triangle)==mesh.DestroyedTriangles.end())
+                     {
+                        cout<<"Returning to"<<triangle;
+                        refine(mesh,triangle);
+                    }
                     return;
                 }
 

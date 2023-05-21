@@ -105,6 +105,7 @@ namespace ProjectLibrary
         vector<OrientedEdge*> GraphedMesh;
 
         vector<unsigned int> StartingTriangles;
+        vector<unsigned int> DestroyedTriangles;
     };
 
 
