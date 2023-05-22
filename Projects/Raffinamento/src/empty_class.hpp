@@ -8,6 +8,7 @@
 #include "map"
 #include <algorithm>
 #include <unordered_set>
+#include<unordered_map>
 #include <iterator>
 
 using namespace std;
@@ -96,15 +97,17 @@ namespace ProjectLibrary
     struct Mesh
     {
         unsigned int NumberCell0D = 0; ///< number of Cell0D
-        map<unsigned int, Point> Cell0D = {}; ///< Cell0D id, size 1 x NumberCell0D
+        unordered_map<unsigned int, Point> Cell0D = {}; ///< Cell0D id, size 1 x NumberCell0D
         map<unsigned int, list<unsigned int>> Cell0DMarkers = {}; ///< Cell0D markers, size 1 x NumberCell0D (marker)
 
         unsigned int NumberCell1D = 0; ///< number of Cell1D
-        map<unsigned int,Edge> Cell1D = {}; ///< Cell1D id, size 1 x NumberCell1D
+        unordered_map<unsigned int,Edge> Cell1D = {}; ///< Cell1D id, size 1 x NumberCell1D
         map<unsigned int, list<unsigned int>> Cell1DMarkers = {}; ///< Cell1D propertoes, size 1 x NumberCell1D (marker)
+        unsigned int LastId1D;
 
         unsigned int NumberCell2D = 0; ///< number of Cell2D
         map<unsigned int, Triangle> Cell2D = {}; ///< Cell2D id, size 1 x NumberCell2D
+        unsigned int LastId2D;
 
         unsigned int NumberCell2DInitial;
         vector<OrientedEdge*> GraphedMesh;

@@ -345,6 +345,8 @@ namespace ProjectLibrary
         mesh.NumberCell1D++;
 
         Triangle t1,t2;
+        mesh.alreadyBisected.push_back(false);
+        mesh.alreadyBisected.push_back(false);
         unsigned int idT1=mesh.NumberCell2D;
         mesh.NumberCell2D++;
         unsigned int idT2=mesh.NumberCell2D;
@@ -411,6 +413,8 @@ namespace ProjectLibrary
             unsigned int idePm=mesh.NumberCell1D;
             mesh.NumberCell1D++;
             Triangle t3,t4;
+            mesh.alreadyBisected.push_back(false);
+            mesh.alreadyBisected.push_back(false);
             unsigned int idT3=mesh.NumberCell2D;
             mesh.NumberCell2D++;
             unsigned int idT4=mesh.NumberCell2D;
@@ -479,12 +483,12 @@ namespace ProjectLibrary
         //for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
         int j=0;
         for (auto it=mesh.StartingTriangles.begin(); it!= mesh.StartingTriangles.end();it++) {
-            cout<<(*it).first<<endl;
+
             for (auto it2=(*(it)).second.begin();it2!=(*(it)).second.end();it2++){
-                if(j==numberTriagles-1) return;
+                if(j==numberTriagles)return;
                 j++;
                 unsigned int triangle= (*it2);
-                if(!mesh.alreadyBisected[triangle]){
+                if(!mesh.alreadyBisected[triangle]&triangle<mesh.NumberCell2DInitial){
                 OrientedEdge* edge = getOrientedEdge(mesh,triangle,mesh.Cell2D[triangle].edges[0]);
                 refine(mesh,edge);
                 }
@@ -503,7 +507,7 @@ namespace ProjectLibrary
         {
             cout<<"borderTriangle\n\n";
             //mesh.DestroyedTriangles.push_back(triangle);
-            bisect(mesh,longestEdge) ;
+            bisect(mesh,longestEdge);
 
             mesh.Cell2D.erase(triangle);
             mesh.Cell1D.erase(longestEdge->RealEdge);
@@ -521,12 +525,10 @@ namespace ProjectLibrary
                     //mesh.DestroyedTriangles.push_back(longestEdge->symmetric->RealTriangle);
                     bisect(mesh,longestEdge);
 
-                    if(triangle<mesh.NumberCell2DInitial)
                     mesh.alreadyBisected[triangle]=true;
 
                     mesh.Cell2D.erase(triangle);
 
-                    if(triangle<mesh.NumberCell2DInitial)
                     mesh.alreadyBisected[longestEdge->symmetric->RealTriangle]=true;
 
                     mesh.Cell2D.erase(longestEdge->symmetric->RealTriangle);
@@ -637,16 +639,11 @@ namespace ProjectLibrary
         }
 
         file<<"Id Origin End\n";
-                for(unsigned int i=0;i<mesh.Cell1D.size();i++)
-                {
-                 Edge e=mesh.Cell1D[i];
-                 if (e.points.begin()!=nullptr)
-                 {
-                     file<<i;
-                 for(auto it=e.points.begin();it!= e.points.end();it++)
-                  file<<" "<<*it;
-                 file<<"\n";
-                 }
+        for(auto it=mesh.Cell1D.begin();it!=mesh.Cell1D.end();it++)
+            {
+                file<<(*it).first;
+                file<<" "<<(*(*it).second.points.begin())<<" "<<(*++(*it).second.points.begin());
+                file<<"\n";
                 }
          return true;
     }
@@ -662,11 +659,11 @@ namespace ProjectLibrary
         }
 
         file<<"Id Vertices Edges\n";
-                for(unsigned int i=0;i<mesh.Cell2D.size();i++)
+                for(auto it=mesh.Cell2D.begin();it!=mesh.Cell2D.end();it++)
                 {
-                 Triangle t=mesh.Cell2D[i];
+                 Triangle t=(*it).second;
                  if(t.edges[0]!=0 && t.edges[1]!=0 && t.edges[1]!=0)
-                   file<<i<<" "<<t.vertices[0]<<" "<<t.vertices[1]<<" "<<t.vertices[2]
+                   file<<(*it).first<<" "<<t.vertices[0]<<" "<<t.vertices[1]<<" "<<t.vertices[2]
                         <<" "<<t.edges[0]<<" "<<t.edges[1]<<" "<<t.edges[2]<<"\n";
                 }
          return true;
