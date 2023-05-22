@@ -147,6 +147,9 @@ namespace ProjectLibrary
       listLines.pop_front();
 
       mesh.NumberCell2D = listLines.size();
+      mesh.NumberCell2DInitial=mesh.NumberCell2D;
+
+      mesh.alreadyBisected.resize(mesh.NumberCell2DInitial);
 
       if (mesh.NumberCell2D == 0)
       {
@@ -173,6 +176,10 @@ namespace ProjectLibrary
           k++;
         }
         triangle.area=ProjectLibrary::area(mesh.Cell0D[triangle.vertices[0]],mesh.Cell0D[triangle.vertices[1]],mesh.Cell0D[triangle.vertices[2]]);
+        if (mesh.StartingTriangles.find(triangle.area) == mesh.StartingTriangles.end())
+          mesh.StartingTriangles.insert({triangle.area, {id}});
+        else
+          mesh.StartingTriangles[triangle.area].push_back(id);
 
         std::unordered_set<unsigned int> temp01, temp02, temp12;
         temp01.insert(triangle.vertices[0]);
@@ -395,21 +402,8 @@ namespace ProjectLibrary
         mesh.GraphedMesh.push_back(oe2Nm);
 
         if (edge->symmetric==nullptr){
-            mesh.trial.push_back(edge);
-            auto itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->RealTriangle);
-            if(itT != mesh.StartingTriangles.end()){
-                mesh.StartingTriangles.erase(itT);
-            }
             return true;
         }else{
-            auto itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->symmetric->RealTriangle);
-            if(itT != mesh.StartingTriangles.end()){
-                mesh.StartingTriangles.erase(itT);
-            }
-            itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->RealTriangle);
-            if(itT != mesh.StartingTriangles.end()){
-                mesh.StartingTriangles.erase(itT);
-            }
             auto PointsNext=mesh.Cell1D[edge->symmetric->next->RealEdge].points;
             auto idPPrec = findThirdVertex(PointsNext,idP1,idP2);
             Point pPrec = mesh.Cell0D[idPPrec];
@@ -476,31 +470,31 @@ namespace ProjectLibrary
             mesh.GraphedMesh.push_back(oeP1Pm);
             mesh.GraphedMesh.push_back(oeP2Pm);
         }
+        return true;
     }
 
-    void Globalrefine(Mesh& mesh)
+    void Globalrefine(Mesh& mesh,int numberTriagles)
     {
-        for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
-            cout<<"Refinement Head"<<*it<<endl;
-        }
-        //for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
 
-        while (!mesh.StartingTriangles.empty()) {
-            for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
-                //cout<<"Refinement Head"<<*it<<endl;
+        //for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
+        int j=0;
+        for (auto it=mesh.StartingTriangles.begin(); it!= mesh.StartingTriangles.end();it++) {
+            cout<<(*it).first<<endl;
+            for (auto it2=(*(it)).second.begin();it2!=(*(it)).second.end();it2++){
+                if(j==numberTriagles-1) return;
+                j++;
+                unsigned int triangle= (*it2);
+                if(!mesh.alreadyBisected[triangle]){
+                OrientedEdge* edge = getOrientedEdge(mesh,triangle,mesh.Cell2D[triangle].edges[0]);
+                refine(mesh,edge);
+                }
             }
-            unsigned int triangle=*(mesh.StartingTriangles.end()-1);
-            mesh.StartingTriangles.pop_back();
-            if(std::find(mesh.DestroyedTriangles.begin(),mesh.DestroyedTriangles.end(),triangle)==mesh.DestroyedTriangles.end()){
-            OrientedEdge* edge = getOrientedEdge(mesh,triangle,mesh.Cell2D[triangle].edges[0]);
-            refine(mesh,edge);
-            }
+
         }
     }
 
     void refine(Mesh& mesh,OrientedEdge* edge)
     {
-        int i=0;
         //cout<<edge->next<<endl;
         unsigned int triangle=edge->RealTriangle;
         cout<<"refining triangle:"<<triangle<<endl;
@@ -514,8 +508,6 @@ namespace ProjectLibrary
             mesh.Cell2D.erase(triangle);
             mesh.Cell1D.erase(longestEdge->RealEdge);
             delete longestEdge;
-
-            i++;
             return;
         }
         else
@@ -529,24 +521,29 @@ namespace ProjectLibrary
                     //mesh.DestroyedTriangles.push_back(longestEdge->symmetric->RealTriangle);
                     bisect(mesh,longestEdge);
 
+                    if(triangle<mesh.NumberCell2DInitial)
+                    mesh.alreadyBisected[triangle]=true;
+
                     mesh.Cell2D.erase(triangle);
+
+                    if(triangle<mesh.NumberCell2DInitial)
+                    mesh.alreadyBisected[longestEdge->symmetric->RealTriangle]=true;
+
                     mesh.Cell2D.erase(longestEdge->symmetric->RealTriangle);
+
                     mesh.Cell1D.erase(longestEdge->RealEdge);
                     //mesh.Cell1D.
                     delete longestEdge->symmetric;
                     delete longestEdge;
-
-                    i++;
                     return;
                 }
                 else
                 {
+                    if(!mesh.alreadyBisected[nextLongest->RealTriangle])
                     refine(mesh,nextLongest);
-                    if(std::find(mesh.DestroyedTriangles.begin(),mesh.DestroyedTriangles.end(),triangle)==mesh.DestroyedTriangles.end())
-                     {
-                        cout<<"Returning to"<<edge->RealTriangle;
-                        refine(mesh,edge);
-                    }
+                    cout<<"Returning to"<<edge->RealTriangle;
+                    if(!mesh.alreadyBisected[edge->RealTriangle])
+                    refine(mesh,edge);
                     return;
                 }
 
@@ -673,27 +670,5 @@ namespace ProjectLibrary
                         <<" "<<t.edges[0]<<" "<<t.edges[1]<<" "<<t.edges[2]<<"\n";
                 }
          return true;
-    }
-
-    void getStartingTriangles(Mesh &mesh, unsigned int n)
-    {
-        vector< decltype(mesh.Cell2D)::iterator> its;
-        its.reserve(mesh.Cell2D.size());
-        for(auto it = mesh.Cell2D.begin(); it != mesh.Cell2D.end(); ++it)
-            its.push_back(it);
-
-        sort(its.begin(), its.end(),
-                      [](decltype(mesh.Cell2D)::iterator & lhs, decltype(mesh.Cell2D)::iterator &rhs) {
-                          return lhs->second.area > rhs->second.area;
-                      });
-        std::vector<unsigned int> vec;
-        vec.reserve(its.size());
-        std::transform(its.begin(), its.end(), std::back_inserter(vec),
-                       [](decltype(mesh.Cell2D)::iterator it) {
-                           return it->first;
-                       });
-        for (unsigned int i=0; i<n;i++){
-            mesh.StartingTriangles.push_back(vec[i]);
-        }
     }
 }

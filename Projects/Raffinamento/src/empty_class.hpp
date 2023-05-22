@@ -38,6 +38,10 @@ namespace ProjectLibrary
         array<unsigned int,3> vertices;
         array<unsigned int,3> edges;
         double area;
+
+        Triangle(){
+
+        }
     };
 
     struct OrientedEdge
@@ -96,16 +100,17 @@ namespace ProjectLibrary
         map<unsigned int, list<unsigned int>> Cell0DMarkers = {}; ///< Cell0D markers, size 1 x NumberCell0D (marker)
 
         unsigned int NumberCell1D = 0; ///< number of Cell1D
-        map<unsigned int, Edge> Cell1D = {}; ///< Cell1D id, size 1 x NumberCell1D
+        map<unsigned int,Edge> Cell1D = {}; ///< Cell1D id, size 1 x NumberCell1D
         map<unsigned int, list<unsigned int>> Cell1DMarkers = {}; ///< Cell1D propertoes, size 1 x NumberCell1D (marker)
 
         unsigned int NumberCell2D = 0; ///< number of Cell2D
         map<unsigned int, Triangle> Cell2D = {}; ///< Cell2D id, size 1 x NumberCell2D
 
+        unsigned int NumberCell2DInitial;
         vector<OrientedEdge*> GraphedMesh;
-        vector<OrientedEdge*> trial;
+        vector<bool> alreadyBisected;
 
-        vector<unsigned int> StartingTriangles;
+        map<double,vector<unsigned int>,std::greater<double>> StartingTriangles;
         vector<unsigned int> DestroyedTriangles;
     };
 
@@ -134,7 +139,7 @@ namespace ProjectLibrary
 
     OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge);
 
-    void Globalrefine(Mesh& mesh);
+    void Globalrefine(Mesh& mesh, int numberTriangles);
 
     void refine(Mesh& mesh,OrientedEdge* edge);
 
