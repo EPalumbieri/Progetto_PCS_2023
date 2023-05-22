@@ -396,6 +396,10 @@ namespace ProjectLibrary
 
         if (edge->symmetric==nullptr){
             mesh.trial.push_back(edge);
+            auto itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->RealTriangle);
+            if(itT != mesh.StartingTriangles.end()){
+                mesh.StartingTriangles.erase(itT);
+            }
             return true;
         }else{
             auto itT= find(mesh.StartingTriangles.begin(),mesh.StartingTriangles.end(),edge->symmetric->RealTriangle);
@@ -483,7 +487,7 @@ namespace ProjectLibrary
 
         while (!mesh.StartingTriangles.empty()) {
             for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
-                cout<<"Refinement Head"<<*it<<endl;
+                //cout<<"Refinement Head"<<*it<<endl;
             }
             unsigned int triangle=*(mesh.StartingTriangles.end()-1);
             mesh.StartingTriangles.pop_back();
@@ -497,15 +501,20 @@ namespace ProjectLibrary
     void refine(Mesh& mesh,OrientedEdge* edge)
     {
         int i=0;
-        cout<<edge->next<<endl;
+        //cout<<edge->next<<endl;
         unsigned int triangle=edge->RealTriangle;
         cout<<"refining triangle:"<<triangle<<endl;
         OrientedEdge* longestEdge=getBiggestEdge(mesh,triangle);
         if(longestEdge->symmetric==nullptr)
         {
             cout<<"borderTriangle\n\n";
-            mesh.DestroyedTriangles.push_back(triangle);
+            //mesh.DestroyedTriangles.push_back(triangle);
             bisect(mesh,longestEdge) ;
+
+            mesh.Cell2D.erase(triangle);
+            mesh.Cell1D.erase(longestEdge->RealEdge);
+            delete longestEdge;
+
             i++;
             return;
         }
@@ -516,9 +525,17 @@ namespace ProjectLibrary
                 if (nextLongest->symmetric==longestEdge)
                 {
                     cout<<"mustBisectHere into"<<longestEdge->symmetric->RealTriangle<<"\n\n";
-                    mesh.DestroyedTriangles.push_back(triangle);
-                    mesh.DestroyedTriangles.push_back(longestEdge->symmetric->RealTriangle);
+                    //mesh.DestroyedTriangles.push_back(triangle);
+                    //mesh.DestroyedTriangles.push_back(longestEdge->symmetric->RealTriangle);
                     bisect(mesh,longestEdge);
+
+                    mesh.Cell2D.erase(triangle);
+                    mesh.Cell2D.erase(longestEdge->symmetric->RealTriangle);
+                    mesh.Cell1D.erase(longestEdge->RealEdge);
+                    //mesh.Cell1D.
+                    delete longestEdge->symmetric;
+                    delete longestEdge;
+
                     i++;
                     return;
                 }
@@ -626,10 +643,13 @@ namespace ProjectLibrary
                 for(unsigned int i=0;i<mesh.Cell1D.size();i++)
                 {
                  Edge e=mesh.Cell1D[i];
-                 file<<i;
+                 if (e.points.begin()!=nullptr)
+                 {
+                     file<<i;
                  for(auto it=e.points.begin();it!= e.points.end();it++)
                   file<<" "<<*it;
                  file<<"\n";
+                 }
                 }
          return true;
     }
@@ -648,7 +668,8 @@ namespace ProjectLibrary
                 for(unsigned int i=0;i<mesh.Cell2D.size();i++)
                 {
                  Triangle t=mesh.Cell2D[i];
-                 file<<i<<" "<<t.vertices[0]<<" "<<t.vertices[1]<<" "<<t.vertices[2]
+                 if(t.edges[0]!=0 && t.edges[1]!=0 && t.edges[1]!=0)
+                   file<<i<<" "<<t.vertices[0]<<" "<<t.vertices[1]<<" "<<t.vertices[2]
                         <<" "<<t.edges[0]<<" "<<t.edges[1]<<" "<<t.edges[2]<<"\n";
                 }
          return true;

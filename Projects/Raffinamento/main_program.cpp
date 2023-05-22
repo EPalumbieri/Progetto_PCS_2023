@@ -9,20 +9,10 @@ int main()
   {
     return 1;
   }
-  getStartingTriangles(mesh,186);
+  getStartingTriangles(mesh,100);
 
   ProjectLibrary::Globalrefine(mesh);
-//  for (int i=0;i<mesh.NumberCell2D;i++)
-//    cout<<getBiggestEdge(mesh,i)->RealEdge<<endl;
 
-  //refine(mesh,mesh.StartingTriangles[0]);
-  //bisect(mesh,ProjectLibrary::getBiggestEdge(mesh,mesh.StartingTriangles[0]));
-  //bisect(mesh,ProjectLibrary::getBiggestEdge(mesh,mesh.StartingTriangles[0]));
-
-//  bisect(mesh,*(mesh.GraphedMesh.begin()+20));
-//  bisect(mesh,*(mesh.GraphedMesh.begin()+30));
-//  bisect(mesh,*(mesh.GraphedMesh.begin()+50));
-//  bisect(mesh,*(mesh.GraphedMesh.begin()+60));
   if(!ExportMesh(mesh,"../Raffinamento/Dataset/Test2/NewCell0Ds.csv","../Raffinamento/Dataset/Test2/NewCell1Ds.csv", "../Raffinamento/Dataset/Test2/NewCell2Ds.csv"))
   {
     return 1;
@@ -30,9 +20,7 @@ int main()
   for(auto it = mesh.GraphedMesh.begin(); it!=mesh.GraphedMesh.end();it++){
 
   }
-  //system("cd ../Raffinamento/Dataset/Test2" );
-  //system("dir");
   //system("py C:/Users/filip/Desktop/Progetto_PCS_2023/Projects/Raffinamento/Dataset/Test2/RenderScript.py");
-  system("py ../Raffinamento/Dataset/Test2/RenderScript.py");
+  system("python ../Raffinamento/Dataset/Test2/RenderScript.py");
   return 0;
 }
