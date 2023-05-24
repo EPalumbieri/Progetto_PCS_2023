@@ -21,9 +21,11 @@ namespace ProjectLibrary
     struct Edge
     {
         std::unordered_set<unsigned int> points;
+        double lenght;
         void operator=(unordered_set<unsigned int> sett)
         {
             points=sett;
+            lenght=0;
         }
         Edge()
         {
@@ -126,9 +128,7 @@ namespace ProjectLibrary
 
     double distance(const Point& p1, const Point& p2);
 
-    double length(Mesh& mesh,unsigned int idTriangle);
-
-    bool isLongest(Mesh& mesh,OrientedEdge* edge);
+    double length(Mesh& mesh,unsigned int idEdge);
 
     Point midpoint(const Point& p1, const Point& p2);
 

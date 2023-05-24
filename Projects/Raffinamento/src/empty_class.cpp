@@ -98,19 +98,18 @@ namespace ProjectLibrary
         return false;
       }
 
-
+       unsigned int id;
       for (const string& line : listLines)
       {
         istringstream converter(line);
 
-        unsigned int id;
         unsigned int marker;
         Vector2i vertices;
-        Edge edge;
+
 
         converter >>  id >> marker >> vertices(0) >> vertices(1);
-        edge.points.insert(vertices(0));
-        edge.points.insert(vertices(1));
+        Edge edge=(unordered_set<unsigned int> ({(unsigned int) vertices(0),(unsigned int) vertices(1)}));
+        edge.lenght=distance(mesh.Cell0D[vertices(0)],mesh.Cell0D[vertices(1)]);
         mesh.Cell1D[id]=edge;
 
         if( marker != 0)
@@ -251,23 +250,6 @@ namespace ProjectLibrary
       return (sqrt(normSquared(p1.x - p2.x, p1.y - p2.y)));
     }
 
-    double length(Mesh& mesh, unsigned int idEdge){
-        auto a=mesh.Cell1D[idEdge].points;
-        auto p1= mesh.Cell0D[*a.begin()];
-        auto p2= mesh.Cell0D[*(++a.begin())];
-        return distance(p1,p2);
-    }
-
-    bool isLongest(Mesh& mesh,OrientedEdge* edge){
-        double edgelength=length(mesh, edge->RealEdge);
-        double max=edgelength;
-        for(int i=0; i<2; i++){
-            edge=edge->next;
-            double ltemp = length(mesh,edge->RealEdge);
-            max = (max<ltemp) ? ltemp : max;
-        }
-        return (max==edgelength);
-    }
 
     Point midpoint(const Point& p1, const Point& p2){
         return(Point((p1.x+p2.x)/2,(p1.y+p2.y)/2));
@@ -298,7 +280,7 @@ namespace ProjectLibrary
         double tmpp=0;
         unsigned int idMax = 0;
         for(int i=0; i<3;i++){
-            tmpp=length(mesh,mesh.Cell2D[idTriangle].edges[i]);
+            tmpp=mesh.Cell1D[mesh.Cell2D[idTriangle].edges[i]].lenght;
             if(maxx<tmpp){
                 maxx=tmpp;
                 idMax=mesh.Cell2D[idTriangle].edges[i];
@@ -331,16 +313,19 @@ namespace ProjectLibrary
         idEPrec=edge->next->next->RealEdge;
         Edge e1m,e2m,eNm;
         e1m=Edge(unordered_set<unsigned int> ({idP1, idPmiddle}));
+        e1m.lenght=distance(p1,pmiddle);
         unsigned int ide1m=mesh.NumberCell1D;
         mesh.NumberCell1D++;
         e2m=Edge(unordered_set<unsigned int> ({idP2, idPmiddle}));
+        e2m.lenght=distance(p2,pmiddle);
         unsigned int ide2m=mesh.NumberCell1D;
         mesh.NumberCell1D++;
 
-        auto PointsNext=mesh.Cell1D[edge->next->RealEdge].points;
-        auto idPNext = findThirdVertex(PointsNext,idP1,idP2);
+        unordered_set<unsigned int> PointsNext=mesh.Cell1D[edge->next->RealEdge].points;
+        unsigned int idPNext = findThirdVertex(PointsNext,idP1,idP2);
         Point pNext =mesh.Cell0D[idPNext];
         eNm=Edge(unordered_set<unsigned int> ({idPNext, idPmiddle}));
+        eNm.lenght=distance(pNext,pmiddle);
         unsigned int ideNm=mesh.NumberCell1D;
         mesh.NumberCell1D++;
 
@@ -410,6 +395,7 @@ namespace ProjectLibrary
             auto idPPrec = findThirdVertex(PointsNext,idP1,idP2);
             Point pPrec = mesh.Cell0D[idPPrec];
             Edge ePm = Edge(unordered_set<unsigned int> ({idPPrec, idPmiddle}));
+            ePm.lenght=distance(pPrec,pmiddle);
             unsigned int idePm=mesh.NumberCell1D;
             mesh.NumberCell1D++;
             Triangle t3,t4;
@@ -480,7 +466,6 @@ namespace ProjectLibrary
     void Globalrefine(Mesh& mesh,int numberTriagles)
     {
 
-        //for (auto it=mesh.StartingTriangles.begin();it!=mesh.StartingTriangles.end();it++) {
         int j=0;
         for (auto it=mesh.StartingTriangles.begin(); it!= mesh.StartingTriangles.end();it++) {
 
@@ -488,7 +473,7 @@ namespace ProjectLibrary
                 if(j==numberTriagles)return;
                 j++;
                 unsigned int triangle= (*it2);
-                if(!mesh.alreadyBisected[triangle]&triangle<mesh.NumberCell2DInitial){
+                if(!mesh.alreadyBisected[triangle]&&triangle<mesh.NumberCell2DInitial){
                 OrientedEdge* edge = getOrientedEdge(mesh,triangle,mesh.Cell2D[triangle].edges[0]);
                 refine(mesh,edge);
                 }
@@ -499,7 +484,6 @@ namespace ProjectLibrary
 
     void refine(Mesh& mesh,OrientedEdge* edge)
     {
-        //cout<<edge->next<<endl;
         unsigned int triangle=edge->RealTriangle;
         cout<<"refining triangle:"<<triangle<<endl;
         OrientedEdge* longestEdge=getBiggestEdge(mesh,triangle);
@@ -526,15 +510,12 @@ namespace ProjectLibrary
                     bisect(mesh,longestEdge);
 
                     mesh.alreadyBisected[triangle]=true;
-
                     mesh.Cell2D.erase(triangle);
 
                     mesh.alreadyBisected[longestEdge->symmetric->RealTriangle]=true;
-
                     mesh.Cell2D.erase(longestEdge->symmetric->RealTriangle);
 
                     mesh.Cell1D.erase(longestEdge->RealEdge);
-                    //mesh.Cell1D.
                     delete longestEdge->symmetric;
                     delete longestEdge;
                     return;
@@ -647,6 +628,7 @@ namespace ProjectLibrary
                 }
          return true;
     }
+
     bool ExportCell2Ds(Mesh &mesh, string nomeFile)
     {
         ofstream file;
