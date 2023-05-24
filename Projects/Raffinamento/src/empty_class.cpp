@@ -2,6 +2,20 @@
 
 namespace ProjectLibrary
 {
+    unsigned int biggestEdge(Mesh& mesh, array<unsigned int,3> edges){
+        double maxx=-1;
+        double tmpp=0;
+        unsigned int idMax = 0;
+        for(unsigned int i = 0; i < 3; i++){
+          tmpp=mesh.Cell1D[edges[i]].lenght;
+          if(maxx<tmpp){
+              maxx=tmpp;
+              idMax=edges[i];
+          }
+        }
+        return idMax;
+    }
+
     bool clockwise(Mesh& mesh, unsigned int id1, unsigned int id2, unsigned int id3)
     {
       Point P0=Point(mesh.Cell0D[id1]);
@@ -174,6 +188,7 @@ namespace ProjectLibrary
           orientededges.push_back(orientededge);
           k++;
         }
+        triangle.longestEdge=biggestEdge(mesh,triangle.edges);
         triangle.area=ProjectLibrary::area(mesh.Cell0D[triangle.vertices[0]],mesh.Cell0D[triangle.vertices[1]],mesh.Cell0D[triangle.vertices[2]]);
         if (mesh.StartingTriangles.find(triangle.area) == mesh.StartingTriangles.end())
           mesh.StartingTriangles.insert({triangle.area, {id}});
@@ -239,8 +254,8 @@ namespace ProjectLibrary
               //not found
             }
         }
+        mesh.GraphedMesh=orientededges;
       }
-      mesh.GraphedMesh=orientededges;
       file.close();
       return true;
     }
@@ -273,20 +288,6 @@ namespace ProjectLibrary
             }
         }
         return idPNext;
-    }
-
-    OrientedEdge* getBiggestEdge(Mesh &mesh, unsigned int idTriangle){
-        double maxx=-1;
-        double tmpp=0;
-        unsigned int idMax = 0;
-        for(int i=0; i<3;i++){
-            tmpp=mesh.Cell1D[mesh.Cell2D[idTriangle].edges[i]].lenght;
-            if(maxx<tmpp){
-                maxx=tmpp;
-                idMax=mesh.Cell2D[idTriangle].edges[i];
-            }
-        }
-        return getOrientedEdge(mesh,idTriangle, idMax);
     }
 
     OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge){
@@ -381,6 +382,8 @@ namespace ProjectLibrary
         mesh.Cell1D[ide1m]=e1m;
         mesh.Cell1D[ide2m]=e2m;
         mesh.Cell1D[ideNm]=eNm;
+        t1.longestEdge=biggestEdge(mesh,t1.edges);
+        t2.longestEdge=biggestEdge(mesh,t2.edges);
         mesh.Cell2D[idT1]=t1;
         mesh.Cell2D[idT2]=t2;
         mesh.GraphedMesh.push_back(oe1m);
@@ -447,12 +450,15 @@ namespace ProjectLibrary
                 edge->symmetric->next->next=oeP1Pm;
                 oeP1Pm->next=oeP1m;
             }
+            mesh.Cell1D[idePm]=ePm;
+            t3.longestEdge=biggestEdge(mesh,t3.edges);
+            t4.longestEdge=biggestEdge(mesh,t4.edges);
+
             oeP1m->symmetric=oe1m;
             oe1m->symmetric=oeP1m;
             oeP2m->symmetric=oe2m;
             oe2m->symmetric=oeP2m;
 
-            mesh.Cell1D[idePm]=ePm;
             mesh.Cell2D[idT3]=t3;
             mesh.Cell2D[idT4]=t4;
             mesh.GraphedMesh.push_back(oeP1m);
@@ -474,65 +480,64 @@ namespace ProjectLibrary
                 j++;
                 unsigned int triangle= (*it2);
                 if(!mesh.alreadyBisected[triangle]&&triangle<mesh.NumberCell2DInitial){
-                OrientedEdge* edge = getOrientedEdge(mesh,triangle,mesh.Cell2D[triangle].edges[0]);
-                refine(mesh,edge);
+                refine(mesh,getOrientedEdge(mesh,triangle,mesh.Cell2D[triangle].longestEdge));
                 }
-            }
 
+            }
         }
     }
 
-    void refine(Mesh& mesh,OrientedEdge* edge)
+    void refine(Mesh& mesh, OrientedEdge* lEdge)
     {
-        unsigned int triangle=edge->RealTriangle;
+        unsigned int triangle=lEdge->RealTriangle;
         cout<<"refining triangle:"<<triangle<<endl;
-        OrientedEdge* longestEdge=getBiggestEdge(mesh,triangle);
-        if(longestEdge->symmetric==nullptr)
+        if(lEdge->symmetric==nullptr)
         {
             cout<<"borderTriangle\n\n";
             //mesh.DestroyedTriangles.push_back(triangle);
-            bisect(mesh,longestEdge);
+            bisect(mesh,lEdge);
 
             mesh.Cell2D.erase(triangle);
-            mesh.Cell1D.erase(longestEdge->RealEdge);
-            delete longestEdge;
+            mesh.Cell1D.erase(lEdge->RealEdge);
+            mesh.GraphedMesh.erase(find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.end(),lEdge));
+            delete lEdge;
             return;
         }
         else
             {
-                cout<<"next"<<longestEdge->symmetric->RealTriangle<<endl;
-                OrientedEdge* nextLongest=getBiggestEdge(mesh,longestEdge->symmetric->RealTriangle);
-                if (nextLongest->symmetric==longestEdge)
+                cout<<"next"<<lEdge->symmetric->RealTriangle<<endl;
+                OrientedEdge* nextLongest=getOrientedEdge(mesh,lEdge->symmetric->RealTriangle,mesh.Cell2D[lEdge->symmetric->RealTriangle].longestEdge);
+                if (nextLongest->symmetric==lEdge)
                 {
-                    cout<<"mustBisectHere into"<<longestEdge->symmetric->RealTriangle<<"\n\n";
+                    cout<<"mustBisectHere into"<<lEdge->symmetric->RealTriangle<<"\n\n";
                     //mesh.DestroyedTriangles.push_back(triangle);
-                    //mesh.DestroyedTriangles.push_back(longestEdge->symmetric->RealTriangle);
-                    bisect(mesh,longestEdge);
+                    //mesh.DestroyedTriangles.push_back(lEdge->symmetric->RealTriangle);
+                    bisect(mesh,lEdge);
 
                     mesh.alreadyBisected[triangle]=true;
                     mesh.Cell2D.erase(triangle);
 
-                    mesh.alreadyBisected[longestEdge->symmetric->RealTriangle]=true;
-                    mesh.Cell2D.erase(longestEdge->symmetric->RealTriangle);
+                    mesh.alreadyBisected[lEdge->symmetric->RealTriangle]=true;
+                    mesh.Cell2D.erase(lEdge->symmetric->RealTriangle);
 
-                    mesh.Cell1D.erase(longestEdge->RealEdge);
-                    delete longestEdge->symmetric;
-                    delete longestEdge;
+                    mesh.Cell1D.erase(lEdge->RealEdge);
+                    mesh.GraphedMesh.erase(find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.end(),lEdge));
+                    mesh.GraphedMesh.erase(find(mesh.GraphedMesh.begin(),mesh.GraphedMesh.end(),lEdge->symmetric));
+                    delete lEdge->symmetric;
+                    delete lEdge;
                     return;
                 }
                 else
                 {
                     if(!mesh.alreadyBisected[nextLongest->RealTriangle])
                     refine(mesh,nextLongest);
-                    cout<<"Returning to"<<edge->RealTriangle;
-                    if(!mesh.alreadyBisected[edge->RealTriangle])
-                    refine(mesh,edge);
+                    cout<<"Returning to"<<lEdge->RealTriangle;
+                    if(!mesh.alreadyBisected[lEdge->RealTriangle])
+                    refine(mesh,lEdge);
                     return;
                 }
 
             }
-
-
 
     }
 

@@ -41,6 +41,7 @@ namespace ProjectLibrary
         array<unsigned int,3> vertices;
         array<unsigned int,3> edges;
         double area;
+        unsigned int longestEdge;
 
         Triangle(){
 
@@ -116,7 +117,6 @@ namespace ProjectLibrary
         vector<bool> alreadyBisected;
 
         map<double,vector<unsigned int>,std::greater<double>> StartingTriangles;
-        vector<unsigned int> DestroyedTriangles;
     };
 
 
@@ -144,7 +144,9 @@ namespace ProjectLibrary
 
     void Globalrefine(Mesh& mesh, int numberTriangles);
 
-    void refine(Mesh& mesh,OrientedEdge* edge);
+    void refine(Mesh& mesh,OrientedEdge* ledge);
+
+    unsigned int biggestEdge(Mesh& mesh, array<unsigned int,3> edges);
 
     ///\brief Import the triangular mesh and test if the mesh is correct
     ///\param mesh: a TriangularMesh struct
