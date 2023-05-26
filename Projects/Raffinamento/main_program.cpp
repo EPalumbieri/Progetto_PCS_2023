@@ -12,7 +12,8 @@ int main()
   {
     return 1;
   }
-  ProjectLibrary::Globalrefine(mesh,144);
+  mesh.Globalrefine(144);
+
 
   if(!ExportMesh(mesh,"../Raffinamento/Dataset/Test1/NewCell0Ds.csv","../Raffinamento/Dataset/Test1/NewCell1Ds.csv", "../Raffinamento/Dataset/Test1/NewCell2Ds.csv"))
   {
@@ -25,6 +26,6 @@ int main()
   std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
   std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 
-  system("py ../Raffinamento/Dataset/Test1/RenderScript.py");
+  system("python ../Raffinamento/Dataset/Test1/RenderScript.py");
   return 0;
 }

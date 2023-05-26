@@ -89,6 +89,11 @@ namespace ProjectLibrary
             y=point.y;
         }
 
+        bool operator==(const Point& point)
+        {
+            return((x==point.x)&&(y==point.y));
+        }
+
     };
 
     inline double normSquared(const double& x, const double& y)
@@ -117,36 +122,45 @@ namespace ProjectLibrary
         vector<bool> alreadyBisected;
 
         map<double,vector<unsigned int>,std::greater<double>> StartingTriangles;
+
+
+        void getStartingTriangles(  unsigned int n);
+
+        double length(  unsigned int idEdge);
+
+        bool bisect( OrientedEdge* edge);
+
+        OrientedEdge* getBiggestEdge( unsigned int idTriangle);
+
+        OrientedEdge* getOrientedEdge( unsigned int idTriangle, unsigned int idEdge);
+
+        void Globalrefine( int numberTriangles);
+
+        void refine( OrientedEdge* ledge);
+
+        unsigned int biggestEdge( array<unsigned int,3> edges);
+
+
     };
 
 
-    void getStartingTriangles(Mesh &mesh, unsigned int n);
 
-    bool clockwise(Point P1, Point P2, Point P3);
+
+    inline bool clockwise(Point& P1, Point& P2, Point& P3);
 
     double Area(Triangle triangle);
 
     double distance(const Point& p1, const Point& p2);
 
-    double length(Mesh& mesh,unsigned int idEdge);
+
 
     Point midpoint(const Point& p1, const Point& p2);
 
-    bool bisect(Mesh& mesh,OrientedEdge* edge);
 
-    void getStartingTriangles(Mesh &mesh, unsigned int n);
 
     unsigned int findThirdVertex(unordered_set<unsigned int> v, unsigned int idP1, unsigned int idP2);
 
-    OrientedEdge* getBiggestEdge(Mesh &mesh, unsigned int idTriangle);
 
-    OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge);
-
-    void Globalrefine(Mesh& mesh, int numberTriangles);
-
-    void refine(Mesh& mesh,OrientedEdge* ledge);
-
-    unsigned int biggestEdge(Mesh& mesh, array<unsigned int,3> edges);
 
     ///\brief Import the triangular mesh and test if the mesh is correct
     ///\param mesh: a TriangularMesh struct
