@@ -8,5 +8,10 @@ y=a[1:,2]
 triangles=b[:,1:4]
 triang=tri.Triangulation(x,y,triangles)
 plt.triplot(triang)
+plt.plot(range(1))
+plt.xlim(0,1)
+plt.ylim(0,1)
+ax = plt.gca()
+ax.set_aspect('equal',adjustable='box')
 plt.savefig("../Raffinamento/Dataset/Test1/NewMesh.png")
 plt.close()

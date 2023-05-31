@@ -36,17 +36,6 @@ namespace ProjectLibrary
         }
     };
 
-    struct Triangle
-    {
-        array<unsigned int,3> vertices;
-        array<unsigned int,3> edges;
-        double area;
-        unsigned int longestEdge;
-
-        Triangle(){
-
-        }
-    };
 
     struct OrientedEdge
     {
@@ -60,6 +49,21 @@ namespace ProjectLibrary
           RealEdge(realEdge),RealTriangle(realTriangle),symmetric(nullptr), next(nullptr){
 
       }
+    };
+
+    struct Triangle
+    {
+        array<unsigned int,3> vertices;
+        array<unsigned int,3> edges;
+        vector<OrientedEdge*> OrEdges;
+        double area;
+        OrientedEdge* longestEdge;
+
+
+        Triangle(){
+            OrEdges.clear();
+            OrEdges.reserve(3);
+        }
     };
 
     struct Point
@@ -99,28 +103,28 @@ namespace ProjectLibrary
 
     struct Mesh
     {
+        unsigned int numberIterations=0;
         unsigned int NumberCell0D = 0; ///< number of Cell0D
-        unordered_map<unsigned int, Point> Cell0D = {}; ///< Cell0D id, size 1 x NumberCell0D
+        vector<Point*> Cell0D = {}; ///< Cell0D id, size 1 x NumberCell0D
         map<unsigned int, list<unsigned int>> Cell0DMarkers = {}; ///< Cell0D markers, size 1 x NumberCell0D (marker)
 
         unsigned int NumberCell1D = 0; ///< number of Cell1D
-        unordered_map<unsigned int,Edge> Cell1D = {}; ///< Cell1D id, size 1 x NumberCell1D
+        vector<Edge*> Cell1D = {}; ///< Cell1D id, size 1 x NumberCell1D
         map<unsigned int, list<unsigned int>> Cell1DMarkers = {}; ///< Cell1D propertoes, size 1 x NumberCell1D (marker)
-        unsigned int LastId1D;
+        vector<bool> alreadyBisectedEdge;
+
 
         unsigned int NumberCell2D = 0; ///< number of Cell2D
-        map<unsigned int, Triangle> Cell2D = {}; ///< Cell2D id, size 1 x NumberCell2D
-        unsigned int LastId2D;
+        vector<Triangle*> Cell2D = {}; ///< Cell2D id, size 1 x NumberCell2D
 
         unsigned int NumberCell2DInitial;
         vector<OrientedEdge*> GraphedMesh;
         vector<bool> alreadyBisected;
 
         map<double,vector<unsigned int>,std::greater<double>> StartingTriangles;
+        vector<ProjectLibrary::Triangle*> TrianglesToBisect;
     };
 
-
-    void getStartingTriangles(Mesh &mesh, unsigned int n);
 
     bool clockwise(Point P1, Point P2, Point P3);
 
@@ -136,9 +140,9 @@ namespace ProjectLibrary
 
     void getStartingTriangles(Mesh &mesh, unsigned int n);
 
-    unsigned int findThirdVertex(unordered_set<unsigned int> v, unsigned int idP1, unsigned int idP2);
+    void TrianglesToBisect(Mesh &mesh, unsigned int n);
 
-    OrientedEdge* getBiggestEdge(Mesh &mesh, unsigned int idTriangle);
+    unsigned int findThirdVertex(unordered_set<unsigned int> v, unsigned int idP1, unsigned int idP2);
 
     OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge);
 
@@ -146,7 +150,9 @@ namespace ProjectLibrary
 
     void refine(Mesh& mesh,OrientedEdge* ledge);
 
-    unsigned int biggestEdge(Mesh& mesh, array<unsigned int,3> edges);
+    OrientedEdge* biggestEdge(Mesh& mesh, vector<OrientedEdge*> edges);
+
+    unsigned int CurrentMax(Mesh &mesh);
 
     ///\brief Import the triangular mesh and test if the mesh is correct
     ///\param mesh: a TriangularMesh struct

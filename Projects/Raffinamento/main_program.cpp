@@ -12,7 +12,16 @@ int main()
   {
     return 1;
   }
-  ProjectLibrary::Globalrefine(mesh,144);
+ int numTriangles=144;
+ unsigned int TotIterations=50000;
+ while (mesh.numberIterations<TotIterations){
+ ProjectLibrary::Globalrefine(mesh,numTriangles);
+ if (mesh.numberIterations<TotIterations){
+ TrianglesToBisect(mesh,numTriangles);
+ numTriangles*=1.25;
+ }
+ }
+
 
   if(!ExportMesh(mesh,"../Raffinamento/Dataset/Test1/NewCell0Ds.csv","../Raffinamento/Dataset/Test1/NewCell1Ds.csv", "../Raffinamento/Dataset/Test1/NewCell2Ds.csv"))
   {
