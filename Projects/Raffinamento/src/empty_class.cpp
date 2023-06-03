@@ -108,7 +108,7 @@ namespace ProjectLibrary
       listLines.pop_front();
 
       mesh.NumberCell1D = listLines.size();
-      mesh.alreadyBisectedEdge.resize(mesh.NumberCell1D);
+      mesh.alreadyBisectedEdge.resize(mesh.NumberCell1D*5);
 
 
       if (mesh.NumberCell1D == 0)
@@ -166,8 +166,9 @@ namespace ProjectLibrary
 
       mesh.NumberCell2D = listLines.size();
       mesh.NumberCell2DInitial=mesh.NumberCell2D;
+      mesh.Cell2D.reserve(mesh.NumberCell2D*100);
 
-      mesh.alreadyBisected.resize(mesh.NumberCell2DInitial);
+      mesh.alreadyBisected.resize(mesh.NumberCell2DInitial*10);
 
       if (mesh.NumberCell2D == 0)
       {
@@ -196,10 +197,9 @@ namespace ProjectLibrary
         }
         triangle->longestEdge=biggestEdge(mesh,triangle->OrEdges);
         triangle->area=ProjectLibrary::area(*mesh.Cell0D[triangle->vertices[0]],*mesh.Cell0D[triangle->vertices[1]],*mesh.Cell0D[triangle->vertices[2]]);
-        if (mesh.StartingTriangles.find(triangle->area) == mesh.StartingTriangles.end())
-          mesh.StartingTriangles.insert({triangle->area, {id}});
-        else
-          mesh.StartingTriangles[triangle->area].push_back(id);
+        if(triangle->area>mesh.AreaTol){
+            mesh.TrianglesToBisect.push_back(id);
+        }
 
         std::unordered_set<unsigned int> temp01, temp02, temp12;
         temp01.insert(triangle->vertices[0]);
@@ -296,15 +296,6 @@ namespace ProjectLibrary
         return idPNext;
     }
 
-    OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge){
-
-        for ( auto it=mesh.GraphedMesh.begin();it!=mesh.GraphedMesh.end();it++){
-            if(((*it)->RealTriangle==idTriangle)&&((*it)->RealEdge==idEdge)){
-                return (*it);
-            }
-        }
-        return nullptr;
-    }
 
     unsigned int CurrentMax(Mesh &mesh) {
         unsigned int idMax=0;
@@ -378,6 +369,12 @@ namespace ProjectLibrary
         t2->vertices={idP2,idPNext,idPmiddle};
         t1->area=area(*p1,*pNext,*pmiddle);
         t2->area=area(*p2,*pNext,*pmiddle);
+        if(t2->area>mesh.AreaTol){
+            mesh.TrianglesToBisect.push_back(idT2);
+        }
+        if(t1->area>mesh.AreaTol){
+            mesh.TrianglesToBisect.push_back(idT1);
+        }
         bool orientation = ProjectLibrary::clockwise(mesh,idP1,idPNext,idP2);
         if(orientation){
             edge->next->RealTriangle=idT1;
@@ -472,6 +469,12 @@ namespace ProjectLibrary
             oeP2Pm->symmetric=oeP1Pm;
             t3->area=area(*p1,*pPrec,*pmiddle);
             t4->area=area(*p2,*pPrec,*pmiddle);
+            if(t3->area>mesh.AreaTol){
+                mesh.TrianglesToBisect.push_back(idT4);
+            }
+            if(t4->area>mesh.AreaTol){
+                mesh.TrianglesToBisect.push_back(idT3);
+            }
             t3->vertices={idP1,idPPrec,idPmiddle};
             t4->vertices={idP2,idPPrec,idPmiddle};
             if(orientation){

@@ -12,15 +12,20 @@ int main()
   {
     return 1;
   }
- int numTriangles=144;
- unsigned int TotIterations=50000;
- while (mesh.numberIterations<TotIterations){
- ProjectLibrary::Globalrefine(mesh,numTriangles);
- if (mesh.numberIterations<TotIterations){
- TrianglesToBisect(mesh,numTriangles);
- numTriangles*=1.25;
+ mesh.AreaTol= 0.000007;
+         ;
+ unsigned int triangle;
+ unsigned int j=0;
+ while (!mesh.TrianglesToBisect.empty()){
+     triangle=mesh.TrianglesToBisect.back();
+     if(!mesh.alreadyBisected[triangle]){
+     j++;
+     refine(mesh,mesh.Cell2D[triangle]->longestEdge);
+     }else{
+        mesh.TrianglesToBisect.pop_back();
+     }
  }
- }
+ cout<<j;
 
 
   if(!ExportMesh(mesh,"../Raffinamento/Dataset/Test1/NewCell0Ds.csv","../Raffinamento/Dataset/Test1/NewCell1Ds.csv", "../Raffinamento/Dataset/Test1/NewCell2Ds.csv"))

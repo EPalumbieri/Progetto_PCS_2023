@@ -122,7 +122,8 @@ namespace ProjectLibrary
         vector<bool> alreadyBisected;
 
         map<double,vector<unsigned int>,std::greater<double>> StartingTriangles;
-        vector<ProjectLibrary::Triangle*> TrianglesToBisect;
+        vector<unsigned int> TrianglesToBisect;
+        double AreaTol;
     };
 
 
