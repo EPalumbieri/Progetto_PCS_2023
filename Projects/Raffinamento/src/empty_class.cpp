@@ -16,6 +16,25 @@ namespace ProjectLibrary
         return idMax;
     }
 
+    void Mesh::clearEdgeData(OrientedEdge * edge)
+    {
+
+        if(edge->symmetric!=nullptr)
+        {
+        this->alreadyBisected[edge->symmetric->RealTriangle]=true;
+        this->Cell2D.erase(edge->symmetric->RealTriangle);
+
+        this->GraphedMesh.erase(find(GraphedMesh.begin(),GraphedMesh.end(),edge->symmetric));
+        delete edge->symmetric;
+        }
+
+        this->Cell1D.erase(edge->RealEdge);
+        this->GraphedMesh.erase(find(GraphedMesh.begin(),GraphedMesh.end(),edge));
+        this->alreadyBisected[edge->RealTriangle]=true;
+        this->Cell2D.erase(edge->RealTriangle);
+        delete edge;
+    }
+
 //    bool clockwise(Mesh& mesh, unsigned int id1, unsigned int id2, unsigned int id3)
 //    {
 //      Point P0=Point(mesh.Cell0D[id1]);
@@ -98,7 +117,7 @@ namespace ProjectLibrary
 
       if(file.fail())
       {
-        cerr<<"wrong file";
+        cerr<<"wrong file 1D";
         return false;
       }
 
@@ -499,13 +518,14 @@ namespace ProjectLibrary
         if(lEdge->symmetric==nullptr)
         {
             cout<<"borderTriangle\n\n";
-            //mesh.DestroyedTriangles.push_back(triangle);
-            bisect(lEdge);
 
-            this->Cell2D.erase(triangle);
-            this->Cell1D.erase(lEdge->RealEdge);
-            this->GraphedMesh.erase(find(GraphedMesh.begin(),GraphedMesh.end(),lEdge));
-            delete lEdge;
+            bisect(lEdge);
+            clearEdgeData(lEdge);
+//            this->alreadyBisected[triangle]=true;
+//            this->Cell2D.erase(triangle);
+//            this->Cell1D.erase(lEdge->RealEdge);
+//            this->GraphedMesh.erase(find(GraphedMesh.begin(),GraphedMesh.end(),lEdge));
+//            delete lEdge;
             return;
         }
         else
@@ -515,21 +535,21 @@ namespace ProjectLibrary
                 if (nextLongest->symmetric==lEdge)
                 {
                     cout<<"mustBisectHere into"<<lEdge->symmetric->RealTriangle<<"\n\n";
-                    //mesh.DestroyedTriangles.push_back(triangle);
-                    //mesh.DestroyedTriangles.push_back(lEdge->symmetric->RealTriangle);
+
                     bisect(lEdge);
+                    clearEdgeData(lEdge);
+//                    this->alreadyBisected[triangle]=true;
+//                    this->Cell2D.erase(triangle);
 
-                    this->alreadyBisected[triangle]=true;
-                    this->Cell2D.erase(triangle);
+//                    this->alreadyBisected[lEdge->symmetric->RealTriangle]=true;
+//                    this->Cell2D.erase(lEdge->symmetric->RealTriangle);
 
-                    this->alreadyBisected[lEdge->symmetric->RealTriangle]=true;
-                    this->Cell2D.erase(lEdge->symmetric->RealTriangle);
-
-                    this->Cell1D.erase(lEdge->RealEdge);
-                    this->GraphedMesh.erase(find(GraphedMesh.begin(),GraphedMesh.end(),lEdge));
-                    this->GraphedMesh.erase(find(GraphedMesh.begin(),GraphedMesh.end(),lEdge->symmetric));
-                    delete lEdge->symmetric;
-                    delete lEdge;
+//                    this->Cell1D.erase(lEdge->RealEdge);
+//                    this->GraphedMesh.erase(find(GraphedMesh.begin(),GraphedMesh.end(),lEdge));
+//                    this->GraphedMesh.erase(find(GraphedMesh.begin(),GraphedMesh.end(),lEdge->symmetric));
+//                    delete lEdge->symmetric;
+//                    delete lEdge;
+//
                     return;
                 }
                 else

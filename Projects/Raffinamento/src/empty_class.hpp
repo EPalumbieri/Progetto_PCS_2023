@@ -110,7 +110,7 @@ namespace ProjectLibrary
 
         unsigned int NumberCell1D = 0; ///< number of Cell1D
         unordered_map<unsigned int,Edge> Cell1D = {}; ///< Cell1D id, size 1 x NumberCell1D
-        map<unsigned int, list<unsigned int>> Cell1DMarkers = {}; ///< Cell1D propertoes, size 1 x NumberCell1D (marker)
+        map<unsigned int, list<unsigned int>> Cell1DMarkers = {}; ///< Cell1D properties, size 1 x NumberCell1D (marker)
         unsigned int LastId1D;
 
         unsigned int NumberCell2D = 0; ///< number of Cell2D
@@ -140,6 +140,7 @@ namespace ProjectLibrary
 
         unsigned int biggestEdge( array<unsigned int,3> edges);
 
+        void clearEdgeData(OrientedEdge* edge);
 
     };
 

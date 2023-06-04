@@ -56,9 +56,25 @@ TEST(TestRefine, TestRefineSymmetry)
    for( auto it=mesh.GraphedMesh.begin();it !=mesh.GraphedMesh.end();it++)
    {
        if((*it)->symmetric!=nullptr)
-       ASSERT_EQ((*it)->symmetric->symmetric,(*it));
+        ASSERT_EQ((*it)->symmetric->symmetric,(*it));
    }
 }
+
+TEST(TestRefine, TestGlobalRefine)
+{
+   ProjectLibrary::Mesh mesh;
+   ASSERT_TRUE(ImportMesh(mesh,"../Raffinamento/Dataset/Test1/Cell0Ds.csv","../Raffinamento/Dataset/Test1/Cell1Ds.csv", "../Raffinamento/Dataset/Test1/Cell2Ds.csv"));
+
+   int i =mesh.NumberCell2DInitial;
+   mesh.Globalrefine(mesh.NumberCell2DInitial);
+
+   for (int j=0;j<i;j++)
+   {
+      // cout<<j<< " "<<mesh.alreadyBisected[j] <<endl;
+      ASSERT_TRUE(mesh.alreadyBisected[j]); // Check that every initial element has been bisected
+   }
+}
+
 
 TEST(TestBisection,TestFindThirdVertex)
 {
@@ -102,8 +118,9 @@ TEST(TestBisection,TestBisectInner)
     ProjectLibrary::Point p=ProjectLibrary::Point(0.5,0.5);
     ASSERT_TRUE(mesh.Cell0D[4]==p);
 
-    ExportMesh(mesh,"../Raffinamento/Dataset/Test3/NewCell0Ds.csv","../Raffinamento/Dataset/Test3/NewCell1Ds.csv", "../Raffinamento/Dataset/Test3/NewCell2Ds.csv");
-    system("python ../Raffinamento/Dataset/Test3/RenderScript.py");
+   //ExportMesh(mesh,"../Raffinamento/Dataset/Test3/NewCell0Ds.csv","../Raffinamento/Dataset/Test3/NewCell1Ds.csv", "../Raffinamento/Dataset/Test3/NewCell2Ds.csv");
+   // system("python ../Raffinamento/Dataset/Test3/RenderScript.py");
 }
+
 
 #endif // __TEST_EMPTY_H
