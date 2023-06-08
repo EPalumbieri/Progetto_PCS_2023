@@ -2,12 +2,12 @@
 
 namespace ProjectLibrary
 {
-    OrientedEdge* biggestEdge(Mesh& mesh, vector<OrientedEdge*> edges){
+    OrientedEdge* Mesh::biggestEdge( vector<OrientedEdge*> edges){
         double maxx=-1;
         double tmpp=0;
         OrientedEdge* Max = nullptr;
         for(unsigned int i = 0; i < 3; i++){
-          tmpp=(mesh.Cell1D[edges[i]->RealEdge])->lenght;
+          tmpp=(Cell1D[edges[i]->RealEdge])->lenght;
           if(maxx<tmpp){
               maxx=tmpp;
               Max=edges[i];
@@ -16,13 +16,10 @@ namespace ProjectLibrary
         return Max;
     }
 
-    bool clockwise(Mesh& mesh, unsigned int id1, unsigned int id2, unsigned int id3)
-    {
-      Point P0=Point(*mesh.Cell0D[id1]);
-      Point P1=Point(*mesh.Cell0D[id2]);
-      Point P2=Point(*mesh.Cell0D[id3]);
-      return !((P1.x - P0.x)*(P2.y - P0.y) - (P2.x - P0.x)*(P1.y - P0.y)>0);
-    }
+    inline bool clockwise(Point& P0,Point& P1, Point& P2)
+       {
+         return !((P1.x - P0.x)*(P2.y - P0.y) - (P2.x - P0.x)*(P1.y - P0.y)>0);
+       }
 
     double area(const Point& P1,
                 const Point& P2,
@@ -195,11 +192,18 @@ namespace ProjectLibrary
           triangle->OrEdges.push_back(orientededge);
           k++;
         }
-        triangle->longestEdge=biggestEdge(mesh,triangle->OrEdges);
+        triangle->longestEdge=mesh.biggestEdge(triangle->OrEdges);
         triangle->area=ProjectLibrary::area(*mesh.Cell0D[triangle->vertices[0]],*mesh.Cell0D[triangle->vertices[1]],*mesh.Cell0D[triangle->vertices[2]]);
-        if(triangle->area>mesh.AreaTol){
-            mesh.TrianglesToBisect.push_back(id);
-        }
+
+
+        if(triangle->area>mesh.AreaTol)
+        { mesh.TrianglesToBisect.push_back(id);}
+
+        if (mesh.StartingTriangles.find(triangle->area) == mesh.StartingTriangles.end())
+          mesh.StartingTriangles.insert({triangle->area, {id}});
+        else
+          mesh.StartingTriangles[triangle->area].push_back(id);
+
 
         std::unordered_set<unsigned int> temp01, temp02, temp12;
         temp01.insert(triangle->vertices[0]);
@@ -234,7 +238,7 @@ namespace ProjectLibrary
             e12=k-1;
         }
 
-        if(ProjectLibrary::clockwise(mesh,triangle->vertices[0],triangle->vertices[1],triangle->vertices[2])){
+        if(ProjectLibrary::clockwise(*mesh.Cell0D[triangle->vertices[0]],*mesh.Cell0D[triangle->vertices[1]],*mesh.Cell0D[triangle->vertices[2]])){
             //e01->e12->e02
             orientededges[e01]->next=orientededges[e12];
             orientededges[e12]->next=orientededges[e02];
@@ -297,62 +301,62 @@ namespace ProjectLibrary
     }
 
 
-    unsigned int CurrentMax(Mesh &mesh) {
-        unsigned int idMax=0;
-        double max=-1;
-        unsigned int i=0;
-        for (auto it=mesh.Cell2D.begin();it!=mesh.Cell2D.end();it++){
-            if(mesh.alreadyBisected[i]==0){
-                if((*it)->area>max){
-                    max=(*it)->area;
-                    idMax=(i);
-                }
-            }
-            i++;
-        }
-        return idMax;
-    }
+//    unsigned int CurrentMax(Mesh &mesh) {
+//        unsigned int idMax=0;
+//        double max=-1;
+//        unsigned int i=0;
+//        for (auto it=mesh.Cell2D.begin();it!=mesh.Cell2D.end();it++){
+//            if(mesh.alreadyBisected[i]==0){
+//                if((*it)->area>max){
+//                    max=(*it)->area;
+//                    idMax=(i);
+//                }
+//            }
+//            i++;
+//        }
+//        return idMax;
+//    }
 
-    bool bisect(Mesh& mesh,OrientedEdge* edge){
-        auto a=mesh.Cell1D[edge->RealEdge]->points;
+    bool Mesh::bisect(OrientedEdge* edge){
+        auto a=Cell1D[edge->RealEdge]->points;
         unsigned int idP1= *a.begin();
         unsigned int idP2= *(++a.begin());
-        Point *p1= mesh.Cell0D[idP1];
-        Point *p2= mesh.Cell0D[idP2];
+        Point *p1= Cell0D[idP1];
+        Point *p2= Cell0D[idP2];
         Point *pmiddle= new Point(midpoint(*p1,*p2));
-        unsigned int idPmiddle=mesh.NumberCell0D;
-        mesh.NumberCell0D++;
+        unsigned int idPmiddle=NumberCell0D;
+        NumberCell0D++;
         unsigned int idENext, idEPrec;
         idENext=edge->next->RealEdge;
         idEPrec=edge->next->next->RealEdge;
         Edge *e1m= new Edge(unordered_set<unsigned int> ({idP1, idPmiddle}));
-        mesh.alreadyBisectedEdge.push_back(false);
+        alreadyBisectedEdge.push_back(false);
         e1m->lenght=distance(*p1,*pmiddle);
-        unsigned int ide1m=mesh.NumberCell1D;
-        mesh.NumberCell1D++;
+        unsigned int ide1m=NumberCell1D;
+        NumberCell1D++;
         Edge *e2m= new Edge(unordered_set<unsigned int> ({idP2, idPmiddle}));
-        mesh.alreadyBisectedEdge.push_back(false);
+        alreadyBisectedEdge.push_back(false);
         e2m->lenght=distance(*p2,*pmiddle);
-        unsigned int ide2m=mesh.NumberCell1D;
-        mesh.NumberCell1D++;
+        unsigned int ide2m=NumberCell1D;
+        NumberCell1D++;
 
-        unordered_set<unsigned int> PointsNext=mesh.Cell1D[edge->next->RealEdge]->points;
+        unordered_set<unsigned int> PointsNext=Cell1D[edge->next->RealEdge]->points;
         unsigned int idPNext = findThirdVertex(PointsNext,idP1,idP2);
-        Point *pNext =mesh.Cell0D[idPNext];
+        Point *pNext =Cell0D[idPNext];
         Edge *eNm= new Edge(unordered_set<unsigned int> ({idPNext, idPmiddle}));
-        mesh.alreadyBisectedEdge.push_back(false);
+        alreadyBisectedEdge.push_back(false);
         eNm->lenght=distance(*pNext,*pmiddle);
-        unsigned int ideNm=mesh.NumberCell1D;
-        mesh.NumberCell1D++;
+        unsigned int ideNm=NumberCell1D;
+        NumberCell1D++;
 
         Triangle *t1=new Triangle();
         Triangle *t2= new Triangle();
-        mesh.alreadyBisected.push_back(false);
-        mesh.alreadyBisected.push_back(false);
-        unsigned int idT1=mesh.NumberCell2D;
-        mesh.NumberCell2D++;
-        unsigned int idT2=mesh.NumberCell2D;
-        mesh.NumberCell2D++;
+        alreadyBisected.push_back(false);
+        alreadyBisected.push_back(false);
+        unsigned int idT1=NumberCell2D;
+        NumberCell2D++;
+        unsigned int idT2=NumberCell2D;
+        NumberCell2D++;
         OrientedEdge* oe1m = new OrientedEdge(ide1m,idT1);
         OrientedEdge* oe2m = new OrientedEdge(ide2m,idT2);
         OrientedEdge* oe1Nm = new OrientedEdge(ideNm,idT1);
@@ -369,13 +373,13 @@ namespace ProjectLibrary
         t2->vertices={idP2,idPNext,idPmiddle};
         t1->area=area(*p1,*pNext,*pmiddle);
         t2->area=area(*p2,*pNext,*pmiddle);
-        if(t2->area>mesh.AreaTol){
-            mesh.TrianglesToBisect.push_back(idT2);
+        if(t2->area>AreaTol){
+            TrianglesToBisect.push_back(idT2);
         }
-        if(t1->area>mesh.AreaTol){
-            mesh.TrianglesToBisect.push_back(idT1);
+        if(t1->area>AreaTol){
+            TrianglesToBisect.push_back(idT1);
         }
-        bool orientation = ProjectLibrary::clockwise(mesh,idP1,idPNext,idP2);
+        bool orientation = ProjectLibrary::clockwise(*Cell0D[idP1],*Cell0D[idPNext],*Cell0D[idP2]);
         if(orientation){
             edge->next->RealTriangle=idT1;
             edge->next->next->RealTriangle=idT2;
@@ -417,41 +421,41 @@ namespace ProjectLibrary
             oe2Nm->next=oe2m;
         }
 
-        mesh.Cell0D.push_back(pmiddle);
-        mesh.Cell1D.push_back(e1m);
-        mesh.Cell1D.push_back(e2m);
-        mesh.Cell1D.push_back(eNm);
+        Cell0D.push_back(pmiddle);
+        Cell1D.push_back(e1m);
+        Cell1D.push_back(e2m);
+        Cell1D.push_back(eNm);
 
-        mesh.Cell2D.push_back(t1);
-        mesh.Cell2D.push_back(t2);
+        Cell2D.push_back(t1);
+        Cell2D.push_back(t2);
 
-        t1->longestEdge=biggestEdge(mesh,t1->OrEdges);
-        t2->longestEdge=biggestEdge(mesh,t2->OrEdges);
+        t1->longestEdge=biggestEdge(t1->OrEdges);
+        t2->longestEdge=biggestEdge(t2->OrEdges);
 
-        mesh.GraphedMesh.push_back(oe1m);
-        mesh.GraphedMesh.push_back(oe2m);
-        mesh.GraphedMesh.push_back(oe1Nm);
-        mesh.GraphedMesh.push_back(oe2Nm);
+        GraphedMesh.push_back(oe1m);
+        GraphedMesh.push_back(oe2m);
+        GraphedMesh.push_back(oe1Nm);
+        GraphedMesh.push_back(oe2Nm);
 
         if (edge->symmetric==nullptr){
             return true;
         }else{
-            auto PointsNext=mesh.Cell1D[edge->symmetric->next->RealEdge]->points;
+            auto PointsNext=Cell1D[edge->symmetric->next->RealEdge]->points;
             auto idPPrec = findThirdVertex(PointsNext,idP1,idP2);
-            Point *pPrec = mesh.Cell0D[idPPrec];
+            Point *pPrec = Cell0D[idPPrec];
             Edge *ePm = new Edge(unordered_set<unsigned int> ({idPPrec, idPmiddle}));
-            mesh.alreadyBisectedEdge.push_back(false);
+            alreadyBisectedEdge.push_back(false);
             ePm->lenght=distance(*pPrec,*pmiddle);
-            unsigned int idePm=mesh.NumberCell1D;
-            mesh.NumberCell1D++;
+            unsigned int idePm=NumberCell1D;
+            NumberCell1D++;
             Triangle *t3 = new Triangle();
             Triangle *t4 = new Triangle();
-            mesh.alreadyBisected.push_back(false);
-            mesh.alreadyBisected.push_back(false);
-            unsigned int idT3=mesh.NumberCell2D;
-            mesh.NumberCell2D++;
-            unsigned int idT4=mesh.NumberCell2D;
-            mesh.NumberCell2D++;
+            alreadyBisected.push_back(false);
+            alreadyBisected.push_back(false);
+            unsigned int idT3=NumberCell2D;
+            NumberCell2D++;
+            unsigned int idT4=NumberCell2D;
+            NumberCell2D++;
             unsigned int idEPNext, idEPPrec;
             idEPNext=edge->symmetric->next->RealEdge;
             idEPPrec=edge->symmetric->next->next->RealEdge;
@@ -469,11 +473,11 @@ namespace ProjectLibrary
             oeP2Pm->symmetric=oeP1Pm;
             t3->area=area(*p1,*pPrec,*pmiddle);
             t4->area=area(*p2,*pPrec,*pmiddle);
-            if(t3->area>mesh.AreaTol){
-                mesh.TrianglesToBisect.push_back(idT4);
+            if(t3->area>AreaTol){
+                TrianglesToBisect.push_back(idT4);
             }
-            if(t4->area>mesh.AreaTol){
-                mesh.TrianglesToBisect.push_back(idT3);
+            if(t4->area>AreaTol){
+                TrianglesToBisect.push_back(idT3);
             }
             t3->vertices={idP1,idPPrec,idPmiddle};
             t4->vertices={idP2,idPPrec,idPmiddle};
@@ -518,85 +522,65 @@ namespace ProjectLibrary
                 edge->symmetric->next->next=oeP1Pm;
                 oeP1Pm->next=oeP1m;
             }
-            mesh.Cell1D.push_back(ePm);
+            Cell1D.push_back(ePm);
 
             oeP1m->symmetric=oe1m;
             oe1m->symmetric=oeP1m;
             oeP2m->symmetric=oe2m;
             oe2m->symmetric=oeP2m;
 
-            mesh.Cell2D.push_back(t3);
-            mesh.Cell2D.push_back(t4);
+            Cell2D.push_back(t3);
+            Cell2D.push_back(t4);
 
 
-            t3->longestEdge=biggestEdge(mesh,t3->OrEdges);
-            t4->longestEdge=biggestEdge(mesh,t4->OrEdges);
+            t3->longestEdge=biggestEdge(t3->OrEdges);
+            t4->longestEdge=biggestEdge(t4->OrEdges);
 
-            mesh.GraphedMesh.push_back(oeP1m);
-            mesh.GraphedMesh.push_back(oeP2m);
-            mesh.GraphedMesh.push_back(oeP1Pm);
-            mesh.GraphedMesh.push_back(oeP2Pm);
+            GraphedMesh.push_back(oeP1m);
+            GraphedMesh.push_back(oeP2m);
+            GraphedMesh.push_back(oeP1Pm);
+            GraphedMesh.push_back(oeP2Pm);
         }
         return true;
     }
 
-    void Globalrefine(Mesh& mesh,int numberTriagles)
-    {
-
-        int j=0;
-        for (auto it=mesh.StartingTriangles.begin(); it!= mesh.StartingTriangles.end();it++) {
-
-            for (auto it2=(*(it)).second.begin();it2!=(*(it)).second.end();it2++){
-                if(j==numberTriagles)return;
-                unsigned int triangle= (*it2);
-                j++;
-                if(!mesh.alreadyBisected[triangle]){
-                refine(mesh,mesh.Cell2D[triangle]->longestEdge);
-                mesh.numberIterations++;
-                }
-            }
-        }
-    }
 
 
 
-    void refine(Mesh& mesh, OrientedEdge* lEdge)
+
+    void Mesh::refine(OrientedEdge* lEdge)
     {
         unsigned int triangle=lEdge->RealTriangle;
         if(lEdge->symmetric==nullptr)
         {
-            //mesh.DestroyedTriangles.push_back(triangle);
-            bisect(mesh,lEdge);
-            mesh.alreadyBisected[triangle]=true;
+            bisect(lEdge);
 
+            alreadyBisected[triangle]=true;
             delete lEdge;
+
             return;
         }
         else
             {
                 unsigned int idd = lEdge->symmetric->RealTriangle;
-                OrientedEdge* nextLongest=mesh.Cell2D[idd]->longestEdge;
+                OrientedEdge* nextLongest=Cell2D[idd]->longestEdge;
                 if (nextLongest->symmetric==lEdge)
                 {
-                    //mesh.DestroyedTriangles.push_back(triangle);
-                    //mesh.DestroyedTriangles.push_back(lEdge->symmetric->RealTriangle);
-                    bisect(mesh,lEdge);
+                    bisect(lEdge);
 
-                    mesh.alreadyBisected[triangle]=true;
-
-
-                    mesh.alreadyBisected[lEdge->symmetric->RealTriangle]=true;
+                    alreadyBisected[triangle]=true;
+                    alreadyBisected[lEdge->symmetric->RealTriangle]=true;
 
                     delete lEdge->symmetric;
                     delete lEdge;
+
                     return;
                 }
                 else
                 {
-                    if(!mesh.alreadyBisected[nextLongest->RealTriangle])
-                    refine(mesh,nextLongest);
-                    if(!mesh.alreadyBisected[lEdge->RealTriangle])
-                    refine(mesh,lEdge);
+                    refine(nextLongest);
+                    refine(lEdge);
+
                     return;
                 }
 
@@ -720,7 +704,7 @@ namespace ProjectLibrary
                 {
                  if(!mesh.alreadyBisected[i]){
                  Triangle *t=(*it);
-                 if(t->edges[0]!=0 && t->edges[1]!=0 && t->edges[1]!=0)
+                 //if(t->edges[0]!=0 && t->edges[1]!=0 && t->edges[1]!=0)
                    file<<i<<" "<<t->vertices[0]<<" "<<t->vertices[1]<<" "<<t->vertices[2]
                         <<" "<<t->edges[0]<<" "<<t->edges[1]<<" "<<t->edges[2]<<"\n";
                  }
@@ -729,21 +713,61 @@ namespace ProjectLibrary
          return true;
     }
 
-    void TrianglesToBisect(Mesh &mesh, unsigned int n)
+    void Mesh::UniformRefine()
     {
-        mesh.StartingTriangles.clear();
-        unsigned int i=0;
-        for(auto it=mesh.Cell2D.begin();it!=mesh.Cell2D.end();it++)
-        {
-         if(!mesh.alreadyBisected[i]){
-         Triangle *t=(*it);
-         if (mesh.StartingTriangles.find(t->area) == mesh.StartingTriangles.end())
-           mesh.StartingTriangles.insert({t->area, {i}});
-         else
-           mesh.StartingTriangles[t->area].push_back(i);
+         unsigned int triangle;
+         //unsigned int j=0;
+         while (!TrianglesToBisect.empty())
+         {
+             triangle=TrianglesToBisect.back();
+
+             if(!alreadyBisected[triangle])
+             {
+              numberIterations++;
+             refine(Cell2D[triangle]->longestEdge);
+             }
+             else
+             {
+                TrianglesToBisect.pop_back();
+             }
          }
-         i++;
+    }
+
+    void Mesh::LocalRefine(int numberTriagles)
+    {
+
+        int j=0;
+        for (auto it=StartingTriangles.begin(); it!= StartingTriangles.end();it++) {
+            //cout<<"area: " <<it->first<<endl;
+            for (auto it2=(*(it)).second.begin();it2!=(*(it)).second.end();it2++){
+
+                if(j==numberTriagles)return;
+
+                unsigned int triangle= (*it2);
+                j++;
+                if(!alreadyBisected[triangle])
+                {
+                refine(Cell2D[triangle]->longestEdge);
+                numberIterations++;
+                }
+            }
         }
     }
 
+    void ResetStartingTriangles(Mesh &mesh)
+        {
+            mesh.StartingTriangles.clear();
+            unsigned int i=0;
+            for(auto it=mesh.Cell2D.begin();it!=mesh.Cell2D.end();it++)
+            {
+             if(!mesh.alreadyBisected[i]){
+             Triangle *t=(*it);
+             if (mesh.StartingTriangles.find(t->area) == mesh.StartingTriangles.end())
+               mesh.StartingTriangles.insert({t->area, {i}});
+             else
+               mesh.StartingTriangles[t->area].push_back(i);
+             }
+             i++;
+            }
+        }
 }

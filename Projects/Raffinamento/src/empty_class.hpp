@@ -17,6 +17,49 @@ using namespace Eigen;
 namespace ProjectLibrary
 {
 
+   struct Point
+  {
+    double x;
+    double y;
+
+
+    Point(const double& x,
+          const double& y):
+      x(x), y(y)
+    {
+    }
+
+    Point(const Point& p):
+      x(p.x), y(p.y)
+    {
+    }
+
+    Point(){
+
+    }
+
+    void operator=(const Point& point)
+    {
+        x=point.x;
+        y=point.y;
+    }
+
+    bool operator==(const Point& point)
+    {
+        return(y==point.y&&x==point.x);
+    }
+
+   };
+
+   inline double normSquared(const double& x, const double& y)
+   {
+     return x * x + y * y;
+   }
+
+   double distance(const Point& p1, const Point& p2);
+   Point midpoint(const Point& p1, const Point& p2);
+   inline bool clockwise(Point& P0,Point& P1, Point& P2);
+
 
     struct Edge
     {
@@ -51,6 +94,7 @@ namespace ProjectLibrary
       }
     };
 
+
     struct Triangle
     {
         array<unsigned int,3> vertices;
@@ -66,39 +110,9 @@ namespace ProjectLibrary
         }
     };
 
-    struct Point
-    {
-        double x;
-        double y;
+    double Area(Triangle triangle);
 
 
-        Point(const double& x,
-              const double& y):
-          x(x), y(y)
-        {
-        }
-
-        Point(const Point& p):
-          x(p.x), y(p.y)
-        {
-        }
-
-        Point(){
-
-        }
-
-        void operator=(const Point& point)
-        {
-            x=point.x;
-            y=point.y;
-        }
-
-    };
-
-    inline double normSquared(const double& x, const double& y)
-    {
-      return x * x + y * y;
-    }
 
 
     struct Mesh
@@ -124,36 +138,28 @@ namespace ProjectLibrary
         map<double,vector<unsigned int>,std::greater<double>> StartingTriangles;
         vector<unsigned int> TrianglesToBisect;
         double AreaTol;
+
+
+        OrientedEdge* biggestEdge(vector<OrientedEdge*> edges);
+
+        bool bisect(OrientedEdge* edge);
+        void refine(OrientedEdge* ledge);
+
+        void LocalRefine( int numberTriangles);
+        void UniformRefine();
     };
 
 
-    bool clockwise(Point P1, Point P2, Point P3);
-
-    double Area(Triangle triangle);
-
-    double distance(const Point& p1, const Point& p2);
-
-    double length(Mesh& mesh,unsigned int idEdge);
-
-    Point midpoint(const Point& p1, const Point& p2);
-
-    bool bisect(Mesh& mesh,OrientedEdge* edge);
-
-    void getStartingTriangles(Mesh &mesh, unsigned int n);
-
-    void TrianglesToBisect(Mesh &mesh, unsigned int n);
-
     unsigned int findThirdVertex(unordered_set<unsigned int> v, unsigned int idP1, unsigned int idP2);
 
-    OrientedEdge* getOrientedEdge(Mesh &mesh, unsigned int idTriangle, unsigned int idEdge);
+    void ResetStartingTriangles(Mesh &mesh);
 
-    void Globalrefine(Mesh& mesh, int numberTriangles);
 
-    void refine(Mesh& mesh,OrientedEdge* ledge);
 
-    OrientedEdge* biggestEdge(Mesh& mesh, vector<OrientedEdge*> edges);
 
-    unsigned int CurrentMax(Mesh &mesh);
+
+
+   // unsigned int CurrentMax(Mesh &mesh);
 
     ///\brief Import the triangular mesh and test if the mesh is correct
     ///\param mesh: a TriangularMesh struct
