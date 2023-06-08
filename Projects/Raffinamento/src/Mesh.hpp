@@ -132,13 +132,14 @@ namespace ProjectLibrary
         vector<Triangle*> Cell2D = {}; ///< Cell2D id, size 1 x NumberCell2D
 
         unsigned int NumberCell2DInitial;
-        vector<OrientedEdge*> GraphedMesh;
+        map<unsigned int,vector<OrientedEdge*>> GraphedMesh;
         vector<bool> alreadyBisected;
 
         map<double,vector<unsigned int>,std::greater<double>> StartingTriangles;
         vector<unsigned int> TrianglesToBisect;
         double AreaTol;
 
+        void addToGraph(OrientedEdge* edge);
 
         OrientedEdge* biggestEdge(vector<OrientedEdge*> edges);
 

@@ -13,9 +13,10 @@ TEST(TestMesh, TestTriangleLoop)
    ProjectLibrary::Mesh mesh;
    ASSERT_TRUE(ImportMesh(mesh,"../Raffinamento/Dataset/Test1/Cell0Ds.csv","../Raffinamento/Dataset/Test1/Cell1Ds.csv", "../Raffinamento/Dataset/Test1/Cell2Ds.csv"));
 
-   for( auto it=mesh.GraphedMesh.begin();it !=mesh.GraphedMesh.end();it++)
+   for( auto it=mesh.Cell2D.begin();it !=mesh.Cell2D.end();it++)
    {
-       ASSERT_EQ((*it)->next->next->next,(*it));
+       for(auto it1=(*it)->OrEdges.begin();it1!=(*it)->OrEdges.end();it1++)
+       ASSERT_EQ((*it1)->next->next->next,*it1);
    }
 }
 
@@ -24,15 +25,18 @@ TEST(TestMesh, TestSymmetry)
    ProjectLibrary::Mesh mesh;
    ASSERT_TRUE(ImportMesh(mesh,"../Raffinamento/Dataset/Test1/Cell0Ds.csv","../Raffinamento/Dataset/Test1/Cell1Ds.csv", "../Raffinamento/Dataset/Test1/Cell2Ds.csv"));
 
-   for( auto it=mesh.GraphedMesh.begin();it !=mesh.GraphedMesh.end();it++)
+   for( auto it=mesh.Cell2D.begin();it !=mesh.Cell2D.end();it++)
    {
-       if((*it)->symmetric==nullptr) //if no symmetric check that edge is at the border (Valid only for initial mesh)
+       for(auto it1=(*it)->OrEdges.begin();it1!=(*it)->OrEdges.end();it1++)
+     {
+       if((*it1)->symmetric==nullptr) //if no symmetric check that edge is at the border (Valid only for initial mesh)
        {
            list<unsigned int> innerEdges=mesh.Cell1DMarkers[0];
-           ASSERT_TRUE(std::find(innerEdges.begin(), innerEdges.end(), (*it)->RealEdge) == innerEdges.end());
+           ASSERT_TRUE(std::find(innerEdges.begin(), innerEdges.end(), (*it1)->RealEdge) == innerEdges.end());
        }
        else
-       ASSERT_EQ((*it)->symmetric->symmetric,(*it));
+       ASSERT_EQ((*it1)->symmetric->symmetric,(*it1));
+      }
    }
 }
 
@@ -113,7 +117,7 @@ TEST(TestBisection,TestBisectOuter)
     ASSERT_TRUE(ImportMesh(mesh,"../Raffinamento/Dataset/Test3/Cell0Ds.csv","../Raffinamento/Dataset/Test3/Cell1Ds.csv", "../Raffinamento/Dataset/Test3/Cell2Ds.csv"));
 
 
-    mesh.bisect(mesh.GraphedMesh[0]);
+    mesh.bisect(mesh.GraphedMesh[0][0]);
 
     ProjectLibrary::Point p=ProjectLibrary::Point(0.5,0);
     ASSERT_TRUE((*mesh.Cell0D[4])==p);
